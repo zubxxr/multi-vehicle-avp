@@ -7,7 +7,7 @@ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 
 ### Launch AWSIM Labs
 ```cmd
-cd awsim_labs_v1.5.2/ && ./awsim_labs.x86_64
+cd awsim_labs_v1.5.3/ && ./awsim_labs.x86_64
 ```
 
 ### Launch E2E Autoware in Parking Map in AWSIM Labs
