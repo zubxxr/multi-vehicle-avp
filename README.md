@@ -12,5 +12,5 @@ cd awsim_labs_v1.5.3/ && ./awsim_labs.x86_64
 
 ### Launch E2E Autoware in Parking Map in AWSIM Labs
 ```cmd
-ros2 launch autoware_launch e2e_simulator.launch.xml vehicle_model:=awsim_labs_vehicle sensor_model:=awsim_labs_sensor_kit map_path:=/home/ovin/autoware_map/parking_area/ launch_vehicle_interface:=true
+ros2 launch autoware_launch e2e_simulator.launch.xml vehicle_model:=awsim_labs_vehicle sensor_model:=awsim_labs_sensor_kit map_path:=/home/zubair/autoware_map/parking_area/ launch_vehicle_interface:=true
 ```
