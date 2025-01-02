@@ -1,5 +1,10 @@
 # AWSIM-Labs-SIRC
 
+### To Build:
+```cmd
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+```
+
 ### Launch AWSIM Labs
 ```cmd
 cd awsim_labs_v1.5.2/ && ./awsim_labs.x86_64
