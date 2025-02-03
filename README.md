@@ -24,6 +24,13 @@ source install/setup.bash
 ros2 launch autoware_launch e2e_simulator.launch.xml vehicle_model:=awsim_labs_vehicle sensor_model:=awsim_labs_sensor_kit map_path:=/home/zubair/autoware_map/sirc/ launch_vehicle_interface:=true
 ```
 
+### Launch YOLO Server
+```cmd
+cd Multi-AVP
+source env/bin/activate
+python3 yolo_server.py
+```
+
 ### Kill the Unity Project Process When Stuck
 ![image](https://github.com/user-attachments/assets/a25e6660-b8f7-4b69-ace2-fd5720a115a0)
 
