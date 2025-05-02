@@ -31,6 +31,13 @@ source env/bin/activate
 python3 yolo_server.py
 ```
 
+
+### UPDATED MAY 2025 - Kill the Unity Project Process When Stuck
+- Just run this:
+```cmd
+kill -9 Unity
+```  
+
 ### Kill the Unity Project Process When Stuck
 ![image](https://github.com/user-attachments/assets/a25e6660-b8f7-4b69-ace2-fd5720a115a0)
 
