@@ -1,4 +1,4 @@
-# AWSIM-Labs-SIRC
+# Multi Vehicle Autonomous Valet Parking
 
 ### To Build:
 ```cmd
