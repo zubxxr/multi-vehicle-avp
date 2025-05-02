@@ -53,5 +53,5 @@ cd $HOME/Multi-AVP
 source $HOME/autoware/install/setup.bash
 source /opt/ros/humble/setup.bash
 source env/bin/activate
-python3 yolo_server.py
+python3 avp_sirc.py
 ```
