@@ -59,6 +59,9 @@ AWSIM has been configured to simulate two ego vehicles, both publishing the same
 The Zenoh bridge is run on both hosts to enable communication and data exchange. On host 1, the [config](https://github.com/zubxxr/Multi-Vehicle-Autonomous-Valet-Parking/blob/main/Zenoh-Setup/zenoh-bridge-awsim.json5) file has no namespace set, and the bridge is started first. This means it sends all ROS 2 topics to host 2 without any filtering. On host 2, the bridge is started shortly after, using a [config](https://github.com/zubxxr/Multi-Vehicle-Autonomous-Valet-Parking/blob/main/Zenoh-Setup/zenoh-bridge-vehicle1.json5) that includes the namespace `/vehicle1`. As a result, it only receives data from the topics under that namespace. However, it can "see" other topics, but not recieve data from them. When these topics are listed on host 2, they appear without the `/vehicle1` prefix. 
 This behavior works as expected and for convienience, as changing all the topics in Autoware would be challenging. Essentially, the Zenoh bridge on host 2 maps namespaced Zenoh topics to local ROS 2 topics by stripping the namespace defined in the config.
 
+![image](https://github.com/user-attachments/assets/794bbd3a-ad3a-430f-b9b6-67220d69003d)
+
+
 **Host 1 ROS2 Topics:**
 
 ![image](https://github.com/user-attachments/assets/010fc7f3-64c8-4104-b005-f408506e1d81)
