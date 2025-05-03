@@ -11,7 +11,7 @@ This step covers running AWSIM and Autoware on Host 1, and another separate Auto
   ```
 **2. Launch AWSIM**
 
-After launching UnityHub, open the project named `AWSIM-Labs-Zenoh` and click play to run the scene. This simulates both ego vehicles, which are running their own Autoware clients. 
+After launching UnityHub, open the project named `AWSIM-Labs-Zenoh` and click play to run the scene. This simulates both ego vehicles, which will run their own Autoware clients. 
 
 ![image](https://github.com/user-attachments/assets/19b96e0d-1337-4224-81e8-99eabad8666d)
 
