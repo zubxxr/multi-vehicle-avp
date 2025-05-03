@@ -110,4 +110,6 @@ source env/bin/activate
 python3 avp_sirc.py
 ```
 This script can be run separately on each host. It subscribes to the empty parking spot ROS2 topic, takes the first parking spot from the list, sets a destination in that parking spot, and parks.
+
+
 [Include Picture Here]
