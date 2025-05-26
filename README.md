@@ -8,6 +8,10 @@ https://terminalroot.com/how-to-install-unity-engine-on-ubuntu-via-appimage/
 ## Install Zenoh Plugin for ROS 2 
 https://github.com/eclipse-zenoh/zenoh-plugin-ros2dds.git
 
+```bash
+git clone https://github.com/eclipse-zenoh/zenoh-plugin-ros2dds.git -b release/1.4.0
+```
+
 ---
 ## Host 1 (My Laptop)
 1. Open Unity Project and Run the Scene (Name: AWSIM-Labs-Zenoh)
