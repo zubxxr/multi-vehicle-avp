@@ -1,5 +1,12 @@
 # GURTTTTTTTTTTTTTTTTTTTTTTTT
 
+## Build Command
+```bash
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+```
+```bash
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-select 
+```
 ---
 ## Host 1 (Nitro PC)
 1. Open Unity Project and Run the Scene (Name: AWSIM-Labs-Zenoh)
