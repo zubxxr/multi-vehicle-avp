@@ -30,24 +30,24 @@
 ## Host 1 (Nitro PC)
 1. Run Zenoh Bridge
    ``` bash
-   cd $HOME/ZENOH/zenoh-plugin-ros2dds
-   source $HOME/ZENOH/zenoh-plugin-ros2dds/install/setup.bash
+   cd $HOME/zenoh-plugin-ros2dds
+   source $HOME/zenoh-plugin-ros2dds/install/setup.bash
    zenoh_bridge_ros2dds -c zenoh-bridge-awsim.json5
    ```
    
 ## Host 2 (Victus Laptop)
 1. Run Zenoh Bridge and Connect to Host 1
    ``` bash
-   cd $HOME/ZENOH/zenoh-plugin-ros2dds
-   source $HOME/ZENOH/zenoh-plugin-ros2dds/install/setup.bash
+   cd $HOME/zenoh-plugin-ros2dds
+   source $HOME/zenoh-plugin-ros2dds/install/setup.bash
    zenoh_bridge_ros2dds -c zenoh-bridge-vehicle1.json5 -e tcp/10.0.0.172:7447
    ```
    
 ## Host 3 (My Laptop)
 1. Run Zenoh Bridge and Connect to Host 1
      ``` bash
-     cd $HOME/ZENOH/zenoh-plugin-ros2dds
-     source $HOME/ZENOH/zenoh-plugin-ros2dds/install/setup.bash
+     cd $HOME/zenoh-plugin-ros2dds
+     source $HOME/zenoh-plugin-ros2dds/install/setup.bash
      zenoh_bridge_ros2dds -c zenoh-bridge-vehicle2.json5 -e tcp/10.0.0.172:7447
      ```
 ---
