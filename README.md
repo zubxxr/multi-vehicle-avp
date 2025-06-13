@@ -8,6 +8,17 @@ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-select 
 ```
 ---
+
+## Queue Planning Sim
+```bash
+ros2 launch autoware_launch planning_simulator.launch.xml vehicle_model:=awsim_labs_vehicle sensor_model:=awsim_labs_sensor_kit map_path:=/home/zubair/autoware_map/sirc/ launch_vehicle_interface:=true
+
+```
+
+
+---
+
+
 ## Host 1 (Nitro PC)
 1. Open Unity Project and Run the Scene (Name: AWSIM-Labs-Zenoh)
      ```bash
