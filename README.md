@@ -1,5 +1,27 @@
 # GURTTTTTTTTTTTTTTTTTTTTTTTTTT
 
+## Straight with lot
+
+### Vehicle 1
+Position: -81.34, -372.5, 267.31
+Rotation: 0, 19.1, 0
+
+### Vehicle 2
+Position: -80.08, -372.5, 261.74
+Rotation: 0, 19.1, 0
+
+
+## Adjacent with lot
+
+### Vehicle 1
+Position: -259.37, -372.5, -198.02
+Rotation: 0, -73.6, 0
+
+### Vehicle 2
+Position: -248.69, -372.5, -195.21
+Rotation: 0, -73.6, 0
+
+
 ## Build Command
 ```bash
 colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
