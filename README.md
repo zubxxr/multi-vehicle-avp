@@ -63,7 +63,16 @@ source env/bin/activate
 python3 yolo_server.py
 ```
 
-## Step 4: Start the ACTUAL Automated Valet Parking Node
+## Step 4: Start the Automated Valet Parking Node
+```cmd
+cd $HOME/Multi-AVP
+source $HOME/autoware/install/setup.bash
+source /opt/ros/humble/setup.bash
+source env/bin/activate
+python3 avp_sirc.py
+```
+
+## Step 5: Start the ACTUAL Automated Valet Parking Node
 ```cmd
 cd $HOME/Multi-AVP/multi_avp_ws/
 source $HOME/autoware/install/setup.bash
