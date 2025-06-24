@@ -80,11 +80,23 @@ source env/bin/activate
 python3 avp_sirc.py
 ```
 
+## Step 4: Start the Automated Valet Parking Node
+```cmd
+cd $HOME/Multi-AVP/multi_avp_ws/
+source $HOME/autoware/install/setup.bash
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+ros2 launch multi_avp_nodes multi_avp_launch.py vehicle_id:=2 enable_managers:=false
+```
+
+
 ## Step 5: Start the ACTUAL Automated Valet Parking Node
 ```cmd
 cd $HOME/Multi-AVP/multi_avp_ws/
 source $HOME/autoware/install/setup.bash
 source /opt/ros/humble/setup.bash
 source install/setup.bash
-ros2 launch multi_avp_nodes multi_avp_launch.py avp_file:=avp_node vehicle_id:=1
+ros2 launch multi_avp_nodes multi_avp_launch.py vehicle_id:=1 enable_managers:=true namespaces:='[main, vehicle2]'
 ```
+
+
