@@ -19,6 +19,12 @@ def generate_launch_description():
         ])
     )
 
+    script_path = PathJoinSubstitution([
+        FindPackageShare('avp_node'),
+        'scripts',
+        'echo_avp_topics.sh'
+    ])
+
     return LaunchDescription([
         DeclareLaunchArgument(
             'avp_file',
@@ -47,29 +53,14 @@ def generate_launch_description():
         ),
 
         DeclareLaunchArgument(
-	    'echo_avp_script_path',
-	    default_value='/home/zubair/Multi-AVP/echo_avp_topics.sh',
-	    description='Path to the echo script'
-	    ),
-
-        DeclareLaunchArgument(
             'manual_localization',
             default_value='false',
             description='Set to true to manually inject initial pose'
         ),
 
-        DeclareLaunchArgument(
-            'echo_avp_script_path',
-            default_value=PathJoinSubstitution([
-                FindPackageShare('avp_node'),  # or wherever your launch file is
-                '../../../scripts/echo_avp_topics.sh'
-            ]),
-            description='Path to the echo script'
-        ),
-
         # Only runs if enable_managers is false and echo_avp is true or auto
         ExecuteProcess(
-            cmd=['bash', LaunchConfiguration('echo_avp_script_path')],
+            cmd=['bash', script_path],
             output='screen',
             condition=echo_condition
         ),
