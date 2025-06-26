@@ -79,7 +79,7 @@ cd $HOME/Multi-AVP/multi_avp_ws/
 source $HOME/autoware/install/setup.bash
 source /opt/ros/humble/setup.bash
 source install/setup.bash
-ros2 launch avp_node multi_avp_launch.py vehicle_id:=2 enable_managers:=false manual_localization:=true
+ros2 launch avp_node multi_avp_launch.py vehicle_id:=2 enable_managers:=false debug:=true
 ```
 
 
@@ -89,7 +89,7 @@ cd $HOME/Multi-AVP/multi_avp_ws/
 source $HOME/autoware/install/setup.bash
 source /opt/ros/humble/setup.bash
 source install/setup.bash
-ros2 launch avp_node multi_avp_launch.py vehicle_id:=1 enable_managers:=true namespaces:='[main, vehicle2]' manual_localization:=true
+ros2 launch avp_node multi_avp_launch.py vehicle_id:=1 enable_managers:=true namespaces:='[main, vehicle2]' debug:=true
 ```
 
 ---
