@@ -1,6 +1,11 @@
 # GURTTTTTTTTTTTTTTTTTTTTTTTTTT
 
 ```bash
+ros2 run rqt_image_view rqt_image_view
+```
+
+
+```bash
 cd $HOME/Multi-AVP
 ./echo_avp_topics.sh
 ```
