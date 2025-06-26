@@ -1,9 +1,10 @@
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess
-from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch.substitutions import LaunchConfiguration, PythonExpression, PathJoinSubstitution
 from launch.conditions import IfCondition
 from launch_ros.actions import Node
+from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     avp_file = LaunchConfiguration('avp_file')
@@ -57,6 +58,14 @@ def generate_launch_description():
             description='Set to true to manually inject initial pose'
         ),
 
+        DeclareLaunchArgument(
+            'echo_avp_script_path',
+            default_value=PathJoinSubstitution([
+                FindPackageShare('avp_node'),  # or wherever your launch file is
+                '../../../scripts/echo_avp_topics.sh'
+            ]),
+            description='Path to the echo script'
+        ),
 
         # Only runs if enable_managers is false and echo_avp is true or auto
         ExecuteProcess(
@@ -67,23 +76,23 @@ def generate_launch_description():
 
         # Manager Nodes
         Node(
-            package='multi_avp_managers',
+            package='avp_managers',
             executable='drop_off_zone_queue_manager',
-            name='queue_manager',
+            name='drop_off_zone_queue_manager',
             output='screen',
             arguments=['--ros-args', '-p', ['namespaces:=', LaunchConfiguration('namespaces')]],
             condition=IfCondition(enable_managers)
         ),
         Node(
-            package='multi_avp_managers',
+            package='avp_managers',
             executable='parking_spot_reservation_manager',
-            name='reservation_manager',
+            name='parking_spot_reservation_manager',
             output='screen',
             arguments=['--ros-args', '-p', ['namespaces:=', LaunchConfiguration('namespaces')]],
             condition=IfCondition(enable_managers)
         ),
         Node(
-            package='multi_avp_managers',
+            package='avp_managers',
             executable='vehicle_count_manager',
             name='vehicle_count_manager',
             output='screen',
@@ -93,7 +102,7 @@ def generate_launch_description():
 
         # AVP Script Node
         Node(
-            package='multi_avp_nodes',
+            package='avp_node',
             executable=avp_file,
             output='screen',
             arguments=[
