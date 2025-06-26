@@ -1,19 +1,46 @@
-# ROS 2 Imports
+"""
+Autonomous Valet Parking (AVP) Node
+
+This is the core controller node that manages the behavior of a single AVP vehicle 
+during a simulated autonomous valet parking flow. It handles commands from the user interface, 
+monitors vehicle states, and publishes appropriate status updates and commands.
+
+Responsibilities:
+- Listens to AVP panel commands (e.g., head to drop-off, start AVP, retrieve).
+- Checks if vehicle has entered the drop-off zone and manages queue requests.
+- Waits for an available parking spot and navigates the vehicle to it.
+- Coordinates reservation and release of parking spots across all vehicles.
+- Publishes live status updates via /avp/status for user feedback.
+
+Topics Used:
+- /avp/command: String commands from the AVP panel.
+- /localization/kinematic_state: Ego vehicle odometry.
+- /parking_spots/empty: List of unoccupied spots, as a Stringified array.
+- /avp/queue/request, /avp/queue/remove: Manage queue positions.
+- /avp/vehicle_count/request: Notify the system about the presence of a new vehicle.
+- /avp/reserved_parking_spots/request, /remove: Reserve or release a parking spot.
+- /parking_spots/reserved: Broadcast currently reserved spots.
+- /planning/mission_planning/goal: Topic to send goal poses to Autoware.
+- /api/motion/state: Check if vehicle is stopped or moving.
+- /planning/mission_planning/route_selector/main/state: Check if vehicle reached goal.
+- /autoware/engage: Engages Autoware to start motion.
+
+Usage (ROS 2 Launch File):
+This script is designed to be launched from a ROS 2 launch file with arguments:
+--vehicle_id <ID> 
+--manual_localization true|false
+"""
+
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import String, Header, Int32
+from std_msgs.msg import String
 from nav_msgs.msg import Odometry
-
-# Autoware Imports
 from autoware_adapi_v1_msgs.msg import MotionState
 from tier4_planning_msgs.msg import RouteState
-
-# Basic Imports
 import argparse
 from unique_identifier_msgs.msg import UUID
 import uuid
 from shapely.geometry import Point, Polygon
-import datetime 
 import subprocess
 import time
 
@@ -54,12 +81,12 @@ class AVPCommandListener(Node):
         self.state = -1
 
         ## Publishers
-        self.publisher_ = self.create_publisher(String, '/avp/status', 10)
-        self.queue_request_pub = self.create_publisher(String, '/queue_manager/request', 10)
-        self.vehicle_count_request_pub = self.create_publisher(String, '/vehicle_count_request', 10)
-        self.request_pub = self.create_publisher(String, '/parking_spots/reserved/request', 10)
-        self.remove_pub = self.create_publisher(String, '/parking_spots/reserved/remove', 10)
-        self.queue_remove_pub = self.create_publisher(String, '/queue_manager/remove', 10)
+        self.status_publisher = self.create_publisher(String, '/avp/status', 10)
+        self.queue_request_pub = self.create_publisher(String, 'avp/queue/request', 10)
+        self.vehicle_count_request_pub = self.create_publisher(String, 'avp/vehicle_count/request', 10)
+        self.reserved_spot_request_pub = self.create_publisher(String, 'avp/reserved_parking_spots/request', 10)
+        self.reserved_spot_remove_pub = self.create_publisher(String, 'avp/reserved_parking_spots/remove', 10)
+        self.queue_remove_pub = self.create_publisher(String, 'avp/queue/remove', 10)
 
         self.reserved_timer = None
         self.current_reserved_spot = None
@@ -93,7 +120,7 @@ class AVPCommandListener(Node):
     def command_callback(self, msg):
         if msg.data == "head_to_dropoff":
             self.head_to_drop_off = True
-            self.publisher_.publish(String(data="Heading to drop-off zone"))
+            self.status_publisher.publish(String(data="Heading to drop-off zone"))
 
         if msg.data == "start_avp":
             self.start_avp = True
@@ -228,7 +255,7 @@ def main(args=None):
     while rclpy.ok():
 
         if not avp_command_listener.status_initialized:
-            avp_command_listener.publisher_.publish(String(data="Arrived at location."))
+            avp_command_listener.status_publisher.publish(String(data="Arrived at location."))
             avp_command_listener.status_initialized = True
 
         # If "Head to drop off" is clicked
@@ -244,7 +271,7 @@ def main(args=None):
             is_in_drop_off_zone(avp_command_listener.ego_x, avp_command_listener.ego_y)
         ):
             # print("Drop-off valet destination reached.")
-            avp_command_listener.publisher_.publish(String(data="Arrived at drop-off area."))
+            avp_command_listener.status_publisher.publish(String(data="Arrived at drop-off area."))
 
         if  (
             motion_state_subscriber.state == 1 and 
@@ -252,19 +279,19 @@ def main(args=None):
             avp_command_listener.ego_x is not None and
             is_in_drop_off_zone(avp_command_listener.ego_x, avp_command_listener.ego_y)
         ):
-            avp_command_listener.publisher_.publish(String(data="Owner is exiting..."))
+            avp_command_listener.status_publisher.publish(String(data="Owner is exiting..."))
             # time.sleep(7)
-            avp_command_listener.publisher_.publish(String(data="Owner has exited."))
+            avp_command_listener.status_publisher.publish(String(data="Owner has exited."))
             # time.sleep(2)
             drop_off_completed = True
-            avp_command_listener.publisher_.publish(String(data="On standby..."))
+            avp_command_listener.status_publisher.publish(String(data="On standby..."))
 
         if avp_command_listener.start_avp and not avp_command_listener.initiate_parking: 
             # start_avp_clicked = True
-            avp_command_listener.publisher_.publish(String(data="Autonomous valet parking started..."))
+            avp_command_listener.status_publisher.publish(String(data="Autonomous valet parking started..."))
             avp_command_listener.initiate_parking = True
             # time.sleep(2)
-            # avp_command_listener.publisher_.publish(String(data="Waiting for an available parking spot..."))
+            # avp_command_listener.status_publisher.publish(String(data="Waiting for an available parking spot..."))
             
         ############### START PARKING SPOT DETECTION ###############
 
@@ -275,7 +302,7 @@ def main(args=None):
             parking_spots = parking_spot_subscriber.available_parking_spots
 
             if parking_spots is None:
-                avp_command_listener.publisher_.publish(String(data="Waiting for an available parking spot..."))
+                avp_command_listener.status_publisher.publish(String(data="Waiting for an available parking spot..."))
 
             if parking_spots is not None:
                 first_spot_in_queue = int(parking_spots.strip().strip('[]').split(',')[0].strip())
@@ -288,9 +315,9 @@ def main(args=None):
                     # Printing the first value
                     print('\nAvailable parking spot found: %s' % first_spot_in_queue)
 
-                    avp_command_listener.publisher_.publish(String(data="Available parking spot found."))
+                    avp_command_listener.status_publisher.publish(String(data="Available parking spot found."))
                     time.sleep(2)
-                    avp_command_listener.publisher_.publish(String(data=f"Parking in Spot {first_spot_in_queue}."))
+                    avp_command_listener.status_publisher.publish(String(data=f"Parking in Spot {first_spot_in_queue}."))
 
                     parking_spot_goal_pose_command = parking_spot_locations[first_spot_in_queue]
                     run_ros2_command(parking_spot_goal_pose_command)
@@ -304,7 +331,7 @@ def main(args=None):
                     if first_spot_in_queue not in avp_command_listener.reserved_spots_list:
                         msg = String()
                         msg.data = str(first_spot_in_queue)
-                        avp_command_listener.request_pub.publish(msg)
+                        avp_command_listener.reserved_spot_request_pub.publish(msg)
                         avp_command_listener.reserved_spots_list.append(first_spot_in_queue)
                         print(f"[AVP] ✅ Sent reservation request: {msg.data}")
                     else:
@@ -323,11 +350,11 @@ def main(args=None):
         ############### END PARKING SPOT DETECTION #################
 
         if route_state_subscriber.state == 6 and parking_complete and not reserved_cleared:
-            avp_command_listener.publisher_.publish(String(data="Car has been parked."))
+            avp_command_listener.status_publisher.publish(String(data="Car has been parked."))
 
             msg = String()
             msg.data = str(chosen_parking_spot)
-            avp_command_listener.remove_pub.publish(msg)
+            avp_command_listener.reserved_spot_remove_pub.publish(msg)
             print(f"[AVP] 🗑 Sent removal request: {msg.data}")
 
             reserved_cleared = True
