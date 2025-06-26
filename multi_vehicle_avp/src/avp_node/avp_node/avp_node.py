@@ -135,7 +135,7 @@ class ParkingSpotSubscriber(Node):
 
         self.subscription = self.create_subscription(
             String,
-            '/parking_spots/empty',
+            '/avp/parking_spots',
             self.available_parking_spots_callback,
             1)
 
@@ -185,9 +185,9 @@ def main(args=None):
     
     parser = argparse.ArgumentParser(description="Run AVP with a specific vehicle ID.")
     parser.add_argument('--vehicle_id', type=str, required=True, help="Vehicle ID number only (e.g., 1 or 2)")
-    parser.add_argument('--manual_localization', type=str, default='false')
+    parser.add_argument('--debug', type=str, default='false')
     args, unknown = parser.parse_known_args()
-    args.manual_localization = args.manual_localization.lower() == 'true'
+    args.debug = args.debug.lower() == 'true'
 
     rclpy.init(args=None)
     
@@ -219,7 +219,7 @@ def main(args=None):
     engage_auto_mode = "ros2 topic pub --once /autoware/engage autoware_vehicle_msgs/msg/Engage '{engage: True}' -1"
     
     # Closer one
-    if args.manual_localization:
+    if args.debug:
         set_initial_pose = "ros2 topic pub --once /initialpose geometry_msgs/msg/PoseWithCovarianceStamped '{header: {stamp: {sec: 1749608320, nanosec: 716034807}, frame_id: 'map'}, pose: {pose: {position: {x: -71.57246398925781, y: -48.895652770996094, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.7899923832424256, w: 0.6131166564520593}}, covariance: [0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.06853891909122467]}}'"
 
     head_to_drop_off = "ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{header: {stamp: {sec: 1749596637, nanosec: 370052949}, frame_id: 'map'}, pose: {position: {x: -57.330997467041016, y: -32.513362884521484, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.11762553592567591, w: 0.9930580211136696}}}' --once"
@@ -241,7 +241,7 @@ def main(args=None):
     }
     
     # Simulate AWSIM initial pose
-    if args.manual_localization:
+    if args.debug:
         run_ros2_command(set_initial_pose)
 
     counter = 0
