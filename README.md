@@ -11,7 +11,7 @@ pkill -f "ros2 topic echo"
 
 ## Build Command
 ```bash
-colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-select 
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-select avp_rviz_panel
 ```
 ---
 
