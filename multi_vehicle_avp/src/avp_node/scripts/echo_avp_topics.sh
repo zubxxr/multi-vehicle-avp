@@ -3,7 +3,7 @@
 # Define only the localization-relevant topics
 TOPICS=(
   "/avp/vehicle_count"
-  "/parking_spots/empty"
+  "/avp/parking_spots"
   "/avp/queue"
   "/avp/reserved_parking_spots"
 )
