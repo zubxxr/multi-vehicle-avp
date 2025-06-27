@@ -80,7 +80,7 @@ python3 yolo_server.py
 
 ## Step 4: ROG AVP Node
 ```cmd
-cd $HOME/Multi-AVP/multi_avp_ws/
+cd $HOME/Multi-AVP/multi_vehicle_avp/
 source $HOME/autoware/install/setup.bash
 source /opt/ros/humble/setup.bash
 source install/setup.bash
@@ -90,7 +90,7 @@ ros2 launch avp_node multi_avp_launch.py vehicle_id:=2 enable_managers:=false de
 
 ## Step 5: Nitro AVP Node
 ```cmd
-cd $HOME/Multi-AVP/multi_avp_ws/
+cd $HOME/Multi-AVP/multi_vehicle_avp/
 source $HOME/autoware/install/setup.bash
 source /opt/ros/humble/setup.bash
 source install/setup.bash
