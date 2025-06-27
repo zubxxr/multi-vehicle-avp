@@ -53,9 +53,9 @@ def generate_launch_description():
         ),
 
         DeclareLaunchArgument(
-            'manual_localization',
+            'debug',
             default_value='false',
-            description='Set to true to manually inject initial pose'
+            description='Set to true to use planning simulator for debugging'
         ),
 
         # Only runs if enable_managers is false and echo_avp is true or auto
@@ -98,7 +98,7 @@ def generate_launch_description():
             output='screen',
             arguments=[
                 '--vehicle_id', vehicle_id,
-                '--manual_localization', LaunchConfiguration('manual_localization')
+                '--debug', LaunchConfiguration('debug')
             ],
         ),
     ])
