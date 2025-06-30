@@ -61,6 +61,43 @@ drop_off_counter = 1
 cars_in_zone = set()
 car_id_to_label = {} 
 
+parking_spot_goals = {
+    1: {'x': -79.46, 'y': -33.53, 'z': 0.0, 'oz': -0.6063, 'ow': 0.7952},
+    2: {'x': -76.62, 'y': -32.63, 'z': 0.0, 'oz': -0.6078, 'ow': 0.7941},
+    3: {'x': -73.87, 'y': -31.64, 'z': 0.0, 'oz': -0.5938, 'ow': 0.8046},
+    4: {'x': -70.97, 'y': -30.97, 'z': 0.0, 'oz': -0.5897, 'ow': 0.8077},
+    5: {'x': -67.93, 'y': -30.15, 'z': 0.0, 'oz': -0.5952, 'ow': 0.8036},
+    6: {'x': -65.31, 'y': -29.12, 'z': 0.0, 'oz': -0.5989, 'ow': 0.8008},
+    7: {'x': -62.3, 'y': -28.18, 'z': 0.0, 'oz': -0.5955, 'ow': 0.8033},
+    8: {'x': -59.79, 'y': -27.68, 'z': 0.0, 'oz': -0.6049, 'ow': 0.7963},
+    9: {'x': -56.38, 'y': -26.39, 'z': 0.0, 'oz': -0.6087, 'ow': 0.7934},
+    10: {'x': -52.88, 'y': -25.45, 'z': 0.0, 'oz': -0.5885, 'ow': 0.8085},
+    11: {'x': -50.1, 'y': -24.57, 'z': 0.0, 'oz': -0.5998, 'ow': 0.8001},
+    12: {'x': -47.29, 'y': -23.8, 'z': 0.0, 'oz': -0.5926, 'ow': 0.8055},
+    13: {'x': -44.49, 'y': -22.98, 'z': 0.0, 'oz': -0.6151, 'ow': 0.7885},
+    14: {'x': -77.22, 'y': -41.24, 'z': 0.0, 'oz': 0.8073, 'ow': 0.5902},
+    15: {'x': -74.66, 'y': -40.47, 'z': 0.0, 'oz': 0.7944, 'ow': 0.6073},
+    16: {'x': -71.69, 'y': -39.6, 'z': 0.0, 'oz': 0.8111, 'ow': 0.585},
+    17: {'x': -68.77, 'y': -38.85, 'z': 0.0, 'oz': 0.7905, 'ow': 0.6124},
+    18: {'x': -65.95, 'y': -37.8, 'z': 0.0, 'oz': 0.7942, 'ow': 0.6076},
+    19: {'x': -62.87, 'y': -37.15, 'z': 0.0, 'oz': 0.804, 'ow': 0.5947},
+    20: {'x': -60.0, 'y': -36.12, 'z': 0.0, 'oz': 0.8133, 'ow': 0.5818},
+    21: {'x': -57.44, 'y': -35.6, 'z': 0.0, 'oz': 0.8008, 'ow': 0.5989},
+    22: {'x': -54.26, 'y': -34.37, 'z': 0.0, 'oz': 0.7959, 'ow': 0.6054},
+    23: {'x': -50.65, 'y': -33.35, 'z': 0.0, 'oz': 0.7811, 'ow': 0.6244},
+    24: {'x': -47.74, 'y': -32.74, 'z': 0.0, 'oz': 0.7991, 'ow': 0.6012},
+    25: {'x': -44.67, 'y': -32.27, 'z': 0.0, 'oz': 0.8076, 'ow': 0.5898},
+    26: {'x': -42.46, 'y': -31.02, 'z': 0.0, 'oz': 0.7803, 'ow': 0.6254},
+}
+
+def generate_command(x, y, z, oz, ow):
+    return f"""ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{{header: {{frame_id: "map"}}, pose: {{position: {{x: {x}, y: {y}, z: {z}}}, orientation: {{x: 0.0, y: 0.0, z: {oz}, w: {ow}}}}}}}' --once"""
+
+parking_spot_locations = {
+    spot_id: generate_command(**pose_dict)
+    for spot_id, pose_dict in parking_spot_goals.items()
+}
+
 def generate_uuid():
     return UUID(uuid=list(uuid.uuid4().bytes))
 
@@ -216,6 +253,8 @@ def main(args=None):
     dropoff_queue_msg = String()
     dropoff_queue_msg.data = "Drop-off Queue: []"
 
+
+    ## 'ros2 topic pub' is redundant. NEED TO CHANGE FOR ALL Publish commands
     engage_auto_mode = "ros2 topic pub --once /autoware/engage autoware_vehicle_msgs/msg/Engage '{engage: True}' -1"
     
     # Closer one
@@ -223,23 +262,10 @@ def main(args=None):
         set_initial_pose = "ros2 topic pub --once /initialpose geometry_msgs/msg/PoseWithCovarianceStamped '{header: {stamp: {sec: 1751258827, nanosec: 66529911}, frame_id: 'map'}, pose: {pose: {position: {x: -105.507080078125, y: -71.17322540283203, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.7930478546598312, w: 0.6091593389413309}}, covariance: [0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.06853891909122467]}}'"
 
     head_to_drop_off = "ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{header: {stamp: {sec: 1751258650, nanosec: 3937974}, frame_id: 'map'}, pose: {position: {x: -90.51332092285156, y: -50.245758056640625, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.13002967784495956, w: 0.9915101022579327}}}' --once"
-
-    parking_spot_locations = {
-        1: "ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{header: {stamp: {sec: 1736234930, nanosec: 485255271}, frame_id: 'map'}, pose: {position: {x: -44.340084075927734, y: -14.542484283447266, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: -0.6048959869666175, w: 0.79630449261051}}}' --once",
-        2: "ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{header: {stamp: {sec: 1736234964, nanosec: 268967027}, frame_id: 'map'}, pose: {position: {x: -41.737525939941406, y: -13.785665512084961, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: -0.6017180648737738, w: 0.7987085641237115}}}' --once",
-        3: "ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{header: {stamp: {sec: 1736235015, nanosec: 500375897}, frame_id: 'map'}, pose: {position: {x: -38.7567138671875, y: -12.567403793334961, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: -0.6019133113169981, w: 0.7985614351190562}}}' --once",
-        4: "ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{header: {stamp: {sec: 1736235477, nanosec: 950428247}, frame_id: 'map'}, pose: {position: {x: -35.9503173828125, y: -11.982339859008789, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: -0.6007336954096015, w: 0.799449202388447}}}' --once",
-        5: "ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{header: {stamp: {sec: 1736235517, nanosec: 532171546}, frame_id: 'map'}, pose: {position: {x: -32.98591232299805, y: -11.230877876281738, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: -0.603871811065959, w: 0.7970814486612511}}}' --once",
-        6: "ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{header: {stamp: {sec: 1736235543, nanosec: 363285134}, frame_id: 'map'}, pose: {position: {x: -30.08383560180664, y: -10.155061721801758, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: -0.608585037220489, w: 0.7934886593211878}}}' --once",
-        7: "ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{header: {stamp: {sec: 1736235564, nanosec: 777861615}, frame_id: 'map'}, pose: {position: {x: -27.20238494873047, y: -9.49226188659668, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: -0.6007326637076104, w: 0.7994499776438543}}}' --once",
-        8: "ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{header: {stamp: {sec: 1736235588, nanosec: 16728058}, frame_id: 'map'}, pose: {position: {x: -24.6075382232666, y: -8.993618965148926, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: -0.6036992773480252, w: 0.797212131449009}}}' --once",
-        15: "ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{header: {stamp: {sec: 1736235678, nanosec: 86261653}, frame_id: 'map'}, pose: {position: {x: -42.034812927246094, y: -22.750713348388672, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.7969156099507567, w: 0.6040906476819629}}}' --once",
-        16: "ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{header: {stamp: {sec: 1736235705, nanosec: 118039164}, frame_id: 'map'}, pose: {position: {x: -39.109901428222656, y: -22.36135482788086, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.7978757289989354, w: 0.6028219646582376}}}' --once",
-        17: "ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{header: {stamp: {sec: 1736235729, nanosec: 260929592}, frame_id: 'map'}, pose: {position: {x: -36.33027648925781, y: -21.73630142211914, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.7999696817030807, w: 0.6000404222682599}}}' --once",
-        18: "ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{header: {stamp: {sec: 1736235765, nanosec: 496677516}, frame_id: 'map'}, pose: {position: {x: -33.3206672668457, y: -20.794353485107422, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.7897854690370711, w: 0.6133831697217438}}}' --once",
-        19: "ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{header: {stamp: {sec: 1736235786, nanosec: 558316281}, frame_id: 'map'}, pose: {position: {x: -30.4317569732666, y: -19.839237213134766, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.7983271798448894, w: 0.6022239732200185}}}' --once",
-    }
     
+
+    retrieve_vehicle_goal_pose = "ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{header: {stamp: {sec: 1751293184, nanosec: 319834439}, frame_id: 'map'}, pose: {position: {x: -97.19635009765625, y: -52.51005554199219, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: -0.9911820111935864, w: 0.13250743634316378}}}' --once"
+
     # Simulate AWSIM initial pose
     if args.debug:
         run_ros2_command(set_initial_pose)
@@ -361,7 +387,7 @@ def main(args=None):
 
         if avp_command_listener.retrieve_vehicle and not retrieve_vehicle_complete:
             print("Going to Drop Off Zone.")
-            run_ros2_command(head_to_drop_off)
+            run_ros2_command(retrieve_vehicle_goal_pose)
             run_ros2_command(engage_auto_mode)
             retrieve_vehicle_complete = True
            
