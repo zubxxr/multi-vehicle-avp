@@ -28,7 +28,7 @@ Topics Used:
 Usage (ROS 2 Launch File):
 This script is designed to be launched from a ROS 2 launch file with arguments:
 --vehicle_id <ID> 
---manual_localization true|false
+--debug true|false
 """
 
 import rclpy
@@ -89,9 +89,13 @@ parking_spot_goals = {
     25: {'x': -44.67, 'y': -32.27, 'z': 0.0, 'oz': 0.8076, 'ow': 0.5898},
     26: {'x': -42.46, 'y': -31.02, 'z': 0.0, 'oz': 0.7803, 'ow': 0.6254},
 }
-
 def generate_command(x, y, z, oz, ow):
     return f"""ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{{header: {{frame_id: "map"}}, pose: {{position: {{x: {x}, y: {y}, z: {z}}}, orientation: {{x: 0.0, y: 0.0, z: {oz}, w: {ow}}}}}}}' --once"""
+
+
+def build_ros2_pub(topic: str, msg_type: str, payload: str, once: bool = True) -> str:
+    return f"ros2 topic pub {'--once ' if once else ''}{topic} {msg_type} '{payload}'"
+
 
 parking_spot_locations = {
     spot_id: generate_command(**pose_dict)
@@ -253,18 +257,34 @@ def main(args=None):
     dropoff_queue_msg = String()
     dropoff_queue_msg.data = "Drop-off Queue: []"
 
-
-    ## 'ros2 topic pub' is redundant. NEED TO CHANGE FOR ALL Publish commands
-    engage_auto_mode = "ros2 topic pub --once /autoware/engage autoware_vehicle_msgs/msg/Engage '{engage: True}' -1"
+    engage_payload = "{engage: True}"
+    engage_auto_mode = build_ros2_pub("/autoware/engage", "autoware_vehicle_msgs/msg/Engage", engage_payload)
     
-    # Closer one
     if args.debug:
-        set_initial_pose = "ros2 topic pub --once /initialpose geometry_msgs/msg/PoseWithCovarianceStamped '{header: {stamp: {sec: 1751258827, nanosec: 66529911}, frame_id: 'map'}, pose: {pose: {position: {x: -105.507080078125, y: -71.17322540283203, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.7930478546598312, w: 0.6091593389413309}}, covariance: [0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.06853891909122467]}}'"
+        initial_pose_payload = (
+            "{header: {frame_id: 'map'}, "
+            "pose: {pose: {position: {x: -105.507080078125, y: -71.17322540283203, z: 0.0}, "
+            "orientation: {x: 0.0, y: 0.0, z: 0.7930478546598312, w: 0.6091593389413309}}, "
+            "covariance: [0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, "
+            "0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "
+            "0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.06853891909122467]}"
+            "}"
+        )
+        set_initial_pose = build_ros2_pub("/initialpose", "geometry_msgs/msg/PoseWithCovarianceStamped", initial_pose_payload)
 
-    head_to_drop_off = "ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{header: {stamp: {sec: 1751258650, nanosec: 3937974}, frame_id: 'map'}, pose: {position: {x: -90.51332092285156, y: -50.245758056640625, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.13002967784495956, w: 0.9915101022579327}}}' --once"
-    
+    drop_off_payload = (
+        "{header: {frame_id: 'map'}, "
+        "pose: {position: {x: -90.51332092285156, y: -50.245758056640625, z: 0.0}, "
+        "orientation: {x: 0.0, y: 0.0, z: 0.13002967784495956, w: 0.9915101022579327}}}"
+    )
+    head_to_drop_off = build_ros2_pub("/planning/mission_planning/goal", "geometry_msgs/msg/PoseStamped", drop_off_payload)
 
-    retrieve_vehicle_goal_pose = "ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{header: {stamp: {sec: 1751293184, nanosec: 319834439}, frame_id: 'map'}, pose: {position: {x: -97.19635009765625, y: -52.51005554199219, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: -0.9911820111935864, w: 0.13250743634316378}}}' --once"
+    retrieve_payload = (
+        "{header: {frame_id: 'map'}, "
+        "pose: {position: {x: -97.19635009765625, y: -52.51005554199219, z: 0.0}, "
+        "orientation: {x: 0.0, y: 0.0, z: -0.9911820111935864, w: 0.13250743634316378}}}"
+    )
+    retrieve_vehicle_goal_pose = build_ros2_pub("/planning/mission_planning/goal", "geometry_msgs/msg/PoseStamped", retrieve_payload)
 
     # Simulate AWSIM initial pose
     if args.debug:
@@ -352,16 +372,16 @@ def main(args=None):
                     queue_msg = String()
                     queue_msg.data = avp_command_listener.ego_id
                     avp_command_listener.queue_remove_pub.publish(queue_msg)
-                    print(f"[QUEUE] 🚫 Sent queue removal request for {queue_msg.data}")
+                    print(f"[QUEUE] Sent queue removal request for {queue_msg.data}")
 
                     if first_spot_in_queue not in avp_command_listener.reserved_spots_list:
                         msg = String()
                         msg.data = str(first_spot_in_queue)
                         avp_command_listener.reserved_spot_request_pub.publish(msg)
                         avp_command_listener.reserved_spots_list.append(first_spot_in_queue)
-                        print(f"[AVP] ✅ Sent reservation request: {msg.data}")
+                        print(f"[AVP] Sent reservation request: {msg.data}")
                     else:
-                        print(f"[AVP] ℹ️ Spot {first_spot_in_queue} already requested.")
+                        print(f"[AVP] Spot {first_spot_in_queue} already requested.")
 
                     route_state_subscriber.state = -1
 
@@ -381,15 +401,27 @@ def main(args=None):
             msg = String()
             msg.data = str(chosen_parking_spot)
             avp_command_listener.reserved_spot_remove_pub.publish(msg)
-            print(f"[AVP] 🗑 Sent removal request: {msg.data}")
+            print(f"[AVP] Sent removal request: {msg.data}")
 
             reserved_cleared = True
 
+            route_state_subscriber.state = -1
+
         if avp_command_listener.retrieve_vehicle and not retrieve_vehicle_complete:
             print("Going to Drop Off Zone.")
+            avp_command_listener.status_publisher.publish(String(data="Car is called for retrieval."))
             run_ros2_command(retrieve_vehicle_goal_pose)
             run_ros2_command(engage_auto_mode)
             retrieve_vehicle_complete = True
+        
+
+        if route_state_subscriber.state == 6 and retrieve_vehicle_complete:
+                avp_command_listener.status_publisher.publish(String(data="Car has been retrieved."))
+
+                ## Passenger getting in
+                ## Leaving Area
+                ## Gone
+
            
         rclpy.spin_once(route_state_subscriber, timeout_sec=1)
         rclpy.spin_once(motion_state_subscriber, timeout_sec=1)
