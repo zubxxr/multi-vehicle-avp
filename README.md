@@ -86,6 +86,7 @@ source /opt/ros/humble/setup.bash
 source install/setup.bash
 ros2 launch avp_node multi_avp_launch.py vehicle_id:=2 enable_managers:=false debug:=true
 ```
+> Check Debug Flag
 
 
 ## Step 5: Nitro AVP Node
@@ -96,6 +97,7 @@ source /opt/ros/humble/setup.bash
 source install/setup.bash
 ros2 launch avp_node multi_avp_launch.py vehicle_id:=1 enable_managers:=true namespaces:='[main, vehicle2]' debug:=true
 ```
+> Check Debug Flag
 
 ---
 
