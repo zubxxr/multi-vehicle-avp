@@ -45,10 +45,10 @@ import subprocess
 import time
 
 DROP_OFF_ZONE_POLYGON = [
-    (-57.1, -28.6),
-    (-55.2, -35.8),
-    (-70.7, -31.9),
-    (-68.3, -39.2)
+    (-88.2, -53.4),
+    (-89.7, -46.4),
+    (-102.8, -57.4),
+    (-105.0, -50.2)
 ]
 
 drop_zone_polygon = Polygon(DROP_OFF_ZONE_POLYGON)
@@ -220,9 +220,9 @@ def main(args=None):
     
     # Closer one
     if args.debug:
-        set_initial_pose = "ros2 topic pub --once /initialpose geometry_msgs/msg/PoseWithCovarianceStamped '{header: {stamp: {sec: 1749608320, nanosec: 716034807}, frame_id: 'map'}, pose: {pose: {position: {x: -71.57246398925781, y: -48.895652770996094, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.7899923832424256, w: 0.6131166564520593}}, covariance: [0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.06853891909122467]}}'"
+        set_initial_pose = "ros2 topic pub --once /initialpose geometry_msgs/msg/PoseWithCovarianceStamped '{header: {stamp: {sec: 1751258827, nanosec: 66529911}, frame_id: 'map'}, pose: {pose: {position: {x: -105.507080078125, y: -71.17322540283203, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.7930478546598312, w: 0.6091593389413309}}, covariance: [0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.06853891909122467]}}'"
 
-    head_to_drop_off = "ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{header: {stamp: {sec: 1749596637, nanosec: 370052949}, frame_id: 'map'}, pose: {position: {x: -57.330997467041016, y: -32.513362884521484, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.11762553592567591, w: 0.9930580211136696}}}' --once"
+    head_to_drop_off = "ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{header: {stamp: {sec: 1751258650, nanosec: 3937974}, frame_id: 'map'}, pose: {position: {x: -90.51332092285156, y: -50.245758056640625, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.13002967784495956, w: 0.9915101022579327}}}' --once"
 
     parking_spot_locations = {
         1: "ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{header: {stamp: {sec: 1736234930, nanosec: 485255271}, frame_id: 'map'}, pose: {position: {x: -44.340084075927734, y: -14.542484283447266, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: -0.6048959869666175, w: 0.79630449261051}}}' --once",
