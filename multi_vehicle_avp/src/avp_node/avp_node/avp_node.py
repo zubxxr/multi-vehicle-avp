@@ -121,7 +121,7 @@ class AVPCommandListener(Node):
         self.status_initialized = False
         self.initiate_parking = False
         self.state = -1
-
+        
         ## Publishers
         self.status_publisher = self.create_publisher(String, '/avp/status', 10)
         self.queue_request_pub = self.create_publisher(String, 'avp/queue/request', 10)
@@ -239,10 +239,11 @@ def main(args=None):
     parking_spot_subscriber = ParkingSpotSubscriber(args)
     reserved_spots_publisher = avp_command_listener.create_publisher(String, '/parking_spots/reserved', 10)
 
-    rclpy.spin_once(avp_command_listener, timeout_sec=2.0)  # Give Zenoh time to sync
-
-    # Wait for existing count from /vehicle_count topic
-    rclpy.spin_once(avp_command_listener, timeout_sec=1.0)
+    timeout = 5
+    while avp_command_listener.vehicle_count_request_pub.get_subscription_count() == 0 and timeout > 0:
+        print("Waiting for /avp/vehicle_count/request subscriber...")
+        time.sleep(1)
+        timeout -= 1
 
     msg = String()
     msg.data = "add_me"
