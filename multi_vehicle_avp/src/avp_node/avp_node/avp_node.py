@@ -206,7 +206,34 @@ class AVPCommandListener(Node):
         except Exception as e:
             self.get_logger().warn(f"Failed to parse /avp/queue: {e}")
             self.current_queue = []
-            
+
+    def handle_owner_exit(self):
+        self.status_publisher.publish(String(data="Owner is exiting..."))
+        self.status_update_publisher.publish(
+            String(data=f"{self.vehicle_id}:Owner is exiting...")
+        )
+        time.sleep(5)
+
+        self.status_publisher.publish(String(data="Owner has exited."))
+        self.status_update_publisher.publish(
+            String(data=f"{self.vehicle_id}:Owner has exited...")
+        )
+        time.sleep(2)
+
+        rclpy.spin_once(self.route_state_subscriber, timeout_sec=1)
+
+        self.get_logger().info(f"[DEBUG] Route Status: {self.route_state_subscriber.state}")
+
+        
+        if self.route_state_subscriber.state == 6:
+            self.status_publisher.publish(String(data="On standby..."))
+            self.status_update_publisher.publish(
+                String(data=f"{self.vehicle_id}:On standby...")
+            )
+
+        return True
+
+        
 class ParkingSpotSubscriber(Node):
     def __init__(self, args):
         super().__init__(f'parking_spot_subscriber_{args.vehicle_id}')
@@ -348,8 +375,10 @@ def main(args=None):
     retrieve_vehicle_complete = False
     reserved_cleared = False
     left_for_new_destination = False
+
     
     while rclpy.ok():
+
 
         if not avp_command_listener.status_initialized:
             avp_command_listener.status_publisher.publish(String(data="Arrived at location."))
@@ -371,7 +400,10 @@ def main(args=None):
             # print("Drop-off valet destination reached.")
             avp_command_listener.status_publisher.publish(String(data="Arrived at drop-off area."))
             avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Arrived at drop-off area."))
-            
+
+
+        motion_state_subscriber.get_logger().info(f"[DEBUG] Motion Status: {motion_state_subscriber.state}")
+
         if  (
             motion_state_subscriber.state == 1 and 
             not drop_off_completed and
@@ -379,24 +411,20 @@ def main(args=None):
             is_in_drop_off_zone(avp_command_listener.ego_x, avp_command_listener.ego_y)
         ):  
             
-            drop_off_queue = avp_command_listener.current_queue
+            
+            if avp_command_listener.current_queue:
 
-            avp_command_listener.get_logger().info(f"Full drop-off queue: {drop_off_queue}")
+                if str(avp_command_listener.current_queue[0]) != str(avp_command_listener.vehicle_id):
 
-            if avp_command_listener.current_queue and avp_command_listener.current_queue[0] != avp_command_listener.vehicle_id:
+                    avp_command_listener.get_logger().info(f"[DEBUG] Vehicle is NOT first in queue — waiting for vehicle ahead.")
+                    
+                    avp_command_listener.status_publisher.publish(String(data="Waiting 10 seconds for vehicle ahead..."))
+
+
                     first_in_line = avp_command_listener.current_queue[0]
 
                     last_known_status = avp_command_listener.status_all_data.get(str(first_in_line), "")
 
-                    avp_command_listener.get_logger().info(f"First Vehicle's status 1: {last_known_status}")
-
-                    # Log and wait
-                    avp_command_listener.status_publisher.publish(String(data="Waiting 10 seconds for vehicle ahead..."))
-                    avp_command_listener.status_update_publisher.publish(String(
-                        data=f"{avp_command_listener.vehicle_id}:Waiting 10 seconds for vehicle ahead..."))
-
-                    # Poll every second up to 10 seconds
-                    start_time = time.time()
                     waited = 0
                     front_moved = False
 
@@ -428,39 +456,36 @@ def main(args=None):
 
                         ## Add code to let it move forward before doing the rest
 
+                        ## Also need to display parking until it has arrived
 
 
-                        
-                        avp_command_listener.status_publisher.publish(String(data="Owner is exiting..."))
-                        avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Owner is exiting..."))
-                        time.sleep(5)
-                        avp_command_listener.status_publisher.publish(String(data="Owner has exited."))
-                        avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Owner has exited."))
-                        time.sleep(2)
+                        avp_command_listener.handle_owner_exit()
                         drop_off_completed = True
-                        avp_command_listener.status_publisher.publish(String(data="On standby..."))
-                        avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:On standby..."))
+
                     else:
                         avp_command_listener.status_publisher.publish(String(data="Vehicle(s) ahead are still stationary. Proceeding with drop-off."))
                         avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Vehicle(s) ahead are still stationary. Proceeding with drop-off."))
                         time.sleep(2)
-                        avp_command_listener.status_publisher.publish(String(data="Owner is exiting..."))
-                        avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Owner is exiting..."))
-                        time.sleep(5)
-                        avp_command_listener.status_publisher.publish(String(data="Owner has exited."))
-                        avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Owner has exited."))
-                        time.sleep(2)
+                        avp_command_listener.handle_owner_exit()
                         drop_off_completed = True
-                        avp_command_listener.status_publisher.publish(String(data="On standby..."))
-                        avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:On standby..."))
+
+                    
+                else:
+                    avp_command_listener.get_logger().info(f"[DEBUG] Vehicle IS first in queue — proceeding with drop-off.")
+                    avp_command_listener.handle_owner_exit()
+                    drop_off_completed = True
+
+            else:
+                avp_command_listener.get_logger().warn(f"[WARN] Queue is empty!")
 
         if avp_command_listener.start_avp and not avp_command_listener.initiate_parking: 
             # start_avp_clicked = True
             avp_command_listener.status_publisher.publish(String(data="Autonomous valet parking started..."))
             avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Autonomous valet parking started..."))
+            time.sleep(2)
+
             avp_command_listener.initiate_parking = True
-            # time.sleep(2)
-            # avp_command_listener.status_publisher.publish(String(data="Waiting for an available parking spot..."))
+
             
         ############### START PARKING SPOT DETECTION ###############
 
@@ -473,6 +498,7 @@ def main(args=None):
             if parking_spots is None:
                 avp_command_listener.status_publisher.publish(String(data="Waiting for an available parking spot..."))
                 avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Waiting for an available parking spot..."))
+                time.sleep(2)
 
             if parking_spots is not None:
                 first_spot_in_queue = int(parking_spots.strip().strip('[]').split(',')[0].strip())
