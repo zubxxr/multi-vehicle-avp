@@ -91,6 +91,15 @@ def generate_launch_description():
             condition=IfCondition(enable_managers)
         ),
 
+        Node(
+            package='avp_managers',
+            executable='vehicle_status_manager',
+            name='vehicle_status_manager',
+            output='screen',
+            arguments=['--ros-args', '-p', ['namespaces:=', LaunchConfiguration('namespaces')]],
+            condition=IfCondition(enable_managers)
+        ),
+
         # AVP Script Node
         Node(
             package='avp_node',
