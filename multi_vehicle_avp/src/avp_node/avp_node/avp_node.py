@@ -130,6 +130,7 @@ class AVPCommandListener(Node):
         self.reserved_spot_remove_pub = self.create_publisher(String, 'avp/reserved_parking_spots/remove', 10)
         self.queue_remove_pub = self.create_publisher(String, 'avp/queue/remove', 10)
 
+
         self.reserved_timer = None
         self.current_reserved_spot = None
 
@@ -138,30 +139,52 @@ class AVPCommandListener(Node):
             '/avp/command',
             self.command_callback,
             10)
+        
+
+        self.status_all_sub = self.create_subscription(
+            String,
+            '/avp/status/all',
+            self.status_all_callback,
+            10
+        )
+        self.status_all_data = {}
                 
         self.create_subscription(Odometry, '/localization/kinematic_state', self.odom_callback, 10)
         self.ego_x = None
         self.ego_y = None
-        self.ego_id = f"car_{args.vehicle_id}"
+
+        self.queue_sub = self.create_subscription(
+            String,
+            '/avp/queue',
+            self.queue_callback,
+            10
+        )
+        self.current_queue = []  # stores the queue list
+
+    def status_all_callback(self, msg):
+        try:
+            self.status_all_data = eval(msg.data)
+        except:
+            self.get_logger().warn("Failed to parse /avp/status/all")
 
     def publish_vehicle_status(self, status: str):
         msg = String()
-        msg.data = f"{self.ego_id}:{status}"
+        msg.data = f"{self.vehicle_id}:{status}"
         self.status_update_pub.publish(msg)
 
     def odom_callback(self, msg):
         self.ego_x = msg.pose.pose.position.x
         self.ego_y = msg.pose.pose.position.y
         if is_in_drop_off_zone(self.ego_x, self.ego_y): 
-            if self.ego_id not in cars_in_zone:
-                cars_in_zone.add(self.ego_id)
+            if self.vehicle_id not in cars_in_zone:
+                cars_in_zone.add(self.vehicle_id)
                 msg = String()
-                msg.data = self.ego_id
+                msg.data = self.vehicle_id
                 self.queue_request_pub.publish(msg)
-                print(f"[QUEUE REQUEST] Sent drop-off request for {self.ego_id}")
+                print(f"[QUEUE REQUEST] Sent drop-off request for {self.vehicle_id}")
         else:
-            if self.ego_id in cars_in_zone:
-                cars_in_zone.remove(self.ego_id)
+            if self.vehicle_id in cars_in_zone:
+                cars_in_zone.remove(self.vehicle_id)
 
     ## When a button in the AVPPanel is clicked, it sends different messages
     def command_callback(self, msg):
@@ -175,6 +198,14 @@ class AVPCommandListener(Node):
 
         if msg.data == "retrieve":
             self.retrieve_vehicle = True
+
+    def queue_callback(self, msg):
+        try:
+            # self.get_logger().info(f"Received queue data: {msg.data}")
+            self.current_queue = eval(msg.data)  # Make sure queue is sent as a list
+        except Exception as e:
+            self.get_logger().warn(f"Failed to parse /avp/queue: {e}")
+            self.current_queue = []
             
 class ParkingSpotSubscriber(Node):
     def __init__(self, args):
@@ -243,6 +274,8 @@ def main(args=None):
     parking_spot_subscriber = ParkingSpotSubscriber(args)
     reserved_spots_publisher = avp_command_listener.create_publisher(String, '/parking_spots/reserved', 10)
 
+    ## Timeout is needed to wait for the vehicle count request subscriber sent from the central manager node
+    ## This is due to high traffic in Zenoh and subscribers/publishers coming in at random
     timeout = 15
 
     while avp_command_listener.vehicle_count_request_pub.get_subscription_count() == 0 and timeout > 0:
@@ -344,16 +377,82 @@ def main(args=None):
             not drop_off_completed and
             avp_command_listener.ego_x is not None and
             is_in_drop_off_zone(avp_command_listener.ego_x, avp_command_listener.ego_y)
-        ):
-            avp_command_listener.status_publisher.publish(String(data="Owner is exiting..."))
-            avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Owner is exiting..."))
-            time.sleep(5)
-            avp_command_listener.status_publisher.publish(String(data="Owner has exited."))
-            avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Owner has exited."))
-            time.sleep(2)
-            drop_off_completed = True
-            avp_command_listener.status_publisher.publish(String(data="On standby..."))
-            avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:On standby..."))
+        ):  
+            
+            drop_off_queue = avp_command_listener.current_queue
+
+            avp_command_listener.get_logger().info(f"Full drop-off queue: {drop_off_queue}")
+
+            if avp_command_listener.current_queue and avp_command_listener.current_queue[0] != avp_command_listener.vehicle_id:
+                    first_in_line = avp_command_listener.current_queue[0]
+
+                    last_known_status = avp_command_listener.status_all_data.get(str(first_in_line), "")
+
+                    avp_command_listener.get_logger().info(f"First Vehicle's status 1: {last_known_status}")
+
+                    # Log and wait
+                    avp_command_listener.status_publisher.publish(String(data="Waiting 10 seconds for vehicle ahead..."))
+                    avp_command_listener.status_update_publisher.publish(String(
+                        data=f"{avp_command_listener.vehicle_id}:Waiting 10 seconds for vehicle ahead..."))
+
+                    # Poll every second up to 10 seconds
+                    start_time = time.time()
+                    waited = 0
+                    front_moved = False
+
+                    while waited < 10:
+                        loop_start = time.time()
+                        rclpy.spin_once(avp_command_listener, timeout_sec=0.1)
+                        new_status = avp_command_listener.status_all_data.get(str(first_in_line), "")
+
+                        avp_command_listener.get_logger().info(f"Vehicle {first_in_line}'s status after {waited+1} sec: {new_status}")
+
+                        if new_status != last_known_status:
+                            avp_command_listener.get_logger().info(f"Status changed! {last_known_status} → {new_status}")
+                            if ("Autonomous valet parking started" in new_status or "Waiting for an available parking spot..." in new_status):
+                                front_moved = True
+                                break
+                                
+                        last_known_status = new_status
+                        waited += 1
+
+                        time_to_wait = 1.0 - (time.time() - loop_start)
+                        if time_to_wait > 0:
+                            time.sleep(time_to_wait)
+
+                    if front_moved:
+                        avp_command_listener.status_publisher.publish(String(data="Vehicle ahead is preparing to leave. Proceeding..."))
+                        avp_command_listener.status_update_publisher.publish(String(
+                            data=f"{avp_command_listener.vehicle_id}:Vehicle ahead preparing to leave. Proceeding..."))
+                        time.sleep(2)
+
+                        ## Add code to let it move forward before doing the rest
+
+
+
+                        
+                        avp_command_listener.status_publisher.publish(String(data="Owner is exiting..."))
+                        avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Owner is exiting..."))
+                        time.sleep(5)
+                        avp_command_listener.status_publisher.publish(String(data="Owner has exited."))
+                        avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Owner has exited."))
+                        time.sleep(2)
+                        drop_off_completed = True
+                        avp_command_listener.status_publisher.publish(String(data="On standby..."))
+                        avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:On standby..."))
+                    else:
+                        avp_command_listener.status_publisher.publish(String(data="Vehicle(s) ahead are still stationary. Proceeding with drop-off."))
+                        avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Vehicle(s) ahead are still stationary. Proceeding with drop-off."))
+                        time.sleep(2)
+                        avp_command_listener.status_publisher.publish(String(data="Owner is exiting..."))
+                        avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Owner is exiting..."))
+                        time.sleep(5)
+                        avp_command_listener.status_publisher.publish(String(data="Owner has exited."))
+                        avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Owner has exited."))
+                        time.sleep(2)
+                        drop_off_completed = True
+                        avp_command_listener.status_publisher.publish(String(data="On standby..."))
+                        avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:On standby..."))
 
         if avp_command_listener.start_avp and not avp_command_listener.initiate_parking: 
             # start_avp_clicked = True
@@ -397,7 +496,7 @@ def main(args=None):
                     run_ros2_command(engage_auto_mode)
 
                     queue_msg = String()
-                    queue_msg.data = avp_command_listener.ego_id
+                    queue_msg.data = avp_command_listener.vehicle_id
                     avp_command_listener.queue_remove_pub.publish(queue_msg)
                     print(f"[QUEUE] Sent queue removal request for {queue_msg.data}")
 
