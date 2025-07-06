@@ -1,9 +1,9 @@
 # GURTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-
+```bash
 pkill -9 -f avp_node
 pkill -9 -f avp_managers
 pkill -9 -f ros2
-
+```
 
 ```bash
 ros2 run rqt_image_view rqt_image_view
