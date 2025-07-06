@@ -175,9 +175,6 @@ class AVPCommandListener(Node):
 
         if msg.data == "retrieve":
             self.retrieve_vehicle = True
-
-
-
             
 class ParkingSpotSubscriber(Node):
     def __init__(self, args):
@@ -206,8 +203,7 @@ class RouteStateSubscriber(Node):
 
     def route_state_callback(self, msg):
         # 6 - arrived
-        if msg.state == 6:
-            self.state = 6
+        self.state = msg.state
 
 class MotionStateSubscriber(Node):
     def __init__(self, args):
@@ -223,8 +219,7 @@ class MotionStateSubscriber(Node):
     def motion_state_callback(self, msg):
         # 1 - stopped
         # 3 - moving
-        if msg.state == 1:
-            self.state = 1
+        self.state = msg.state
     
 def run_ros2_command(command):
     try:
@@ -343,6 +338,8 @@ def main(args=None):
             # print("Drop-off valet destination reached.")
             avp_command_listener.status_publisher.publish(String(data="Arrived at drop-off area."))
             avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Arrived at drop-off area."))
+            
+        motion_state_subscriber.get_logger().info(f"Motion state: {motion_state_subscriber.state}")
 
         if  (
             motion_state_subscriber.state == 1 and 
