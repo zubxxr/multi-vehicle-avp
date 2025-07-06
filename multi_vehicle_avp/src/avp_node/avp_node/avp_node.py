@@ -243,14 +243,14 @@ def main(args=None):
     parking_spot_subscriber = ParkingSpotSubscriber(args)
     reserved_spots_publisher = avp_command_listener.create_publisher(String, '/parking_spots/reserved', 10)
 
-    timeout = 5
-
-    avp_command_listener.vehicle_id_pub.publish(String(data=str(avp_command_listener.vehicle_id)))
+    timeout = 15
 
     while avp_command_listener.vehicle_count_request_pub.get_subscription_count() == 0 and timeout > 0:
-        print("Waiting for /avp/vehicle_count/request subscriber...")
+        avp_command_listener.get_logger().info("Waiting for /avp/vehicle_count/request subscriber...")
         time.sleep(1)
         timeout -= 1
+
+    avp_command_listener.vehicle_id_pub.publish(String(data=str(avp_command_listener.vehicle_id)))
 
     msg = String()
     msg.data = "add_me"
@@ -339,8 +339,6 @@ def main(args=None):
             avp_command_listener.status_publisher.publish(String(data="Arrived at drop-off area."))
             avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Arrived at drop-off area."))
             
-        motion_state_subscriber.get_logger().info(f"Motion state: {motion_state_subscriber.state}")
-
         if  (
             motion_state_subscriber.state == 1 and 
             not drop_off_completed and
