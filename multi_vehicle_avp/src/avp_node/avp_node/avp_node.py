@@ -222,18 +222,32 @@ class AVPCommandListener(Node):
 
         rclpy.spin_once(self.route_state_subscriber, timeout_sec=1)
 
-        self.get_logger().info(f"[DEBUG] Route Status: {self.route_state_subscriber.state}")
+        # self.get_logger().info(f"[DEBUG] Route Status: {self.route_state_subscriber.state}")
 
         
-        if self.route_state_subscriber.state == 6:
-            self.status_publisher.publish(String(data="On standby..."))
-            self.status_update_publisher.publish(
-                String(data=f"{self.vehicle_id}:On standby...")
-            )
+        # Keep retrying until route state == 6
+        while self.route_state_subscriber.state != 6:
+            timeout = 5.0
+            self.get_logger().info(f"[WAITING] Trying to confirm state=6...")
 
-        return True
+            while self.route_state_subscriber.state != 6 and timeout > 0:
+                rclpy.spin_once(self.route_state_subscriber, timeout_sec=0.2)
+                timeout -= 0.2
+                # self.get_logger().info(f"[WAIT] Route State = {self.route_state_subscriber.state}")
 
-        
+            if self.route_state_subscriber.state == 6:
+                self.status_publisher.publish(String(data="On standby..."))
+                self.status_update_publisher.publish(
+                    String(data=f"{self.vehicle_id}:On standby...")
+                )
+                return True
+            else:
+                self.status_publisher.publish(String(data="Waiting to proceed in queue..."))
+                self.status_update_publisher.publish(
+                    String(data=f"{self.vehicle_id}:Waiting to proceed in queue...")
+                )
+                time.sleep(5)
+            
 class ParkingSpotSubscriber(Node):
     def __init__(self, args):
         super().__init__(f'parking_spot_subscriber_{args.vehicle_id}')
@@ -304,6 +318,10 @@ def main(args=None):
     ## Timeout is needed to wait for the vehicle count request subscriber sent from the central manager node
     ## This is due to high traffic in Zenoh and subscribers/publishers coming in at random
     timeout = 15
+    if args.debug: # if debug is true, that means planning simulator is used, meaning less traffic, so 5 is sufficient
+        timeout = 5
+    else: 
+        timeout = 15
 
     while avp_command_listener.vehicle_count_request_pub.get_subscription_count() == 0 and timeout > 0:
         avp_command_listener.get_logger().info("Waiting for /avp/vehicle_count/request subscriber...")
@@ -402,7 +420,7 @@ def main(args=None):
             avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Arrived at drop-off area."))
 
 
-        motion_state_subscriber.get_logger().info(f"[DEBUG] Motion Status: {motion_state_subscriber.state}")
+        # motion_state_subscriber.get_logger().info(f"[DEBUG] Motion Status: {motion_state_subscriber.state}")
 
         if  (
             motion_state_subscriber.state == 1 and 
@@ -419,7 +437,9 @@ def main(args=None):
                     avp_command_listener.get_logger().info(f"[DEBUG] Vehicle is NOT first in queue — waiting for vehicle ahead.")
                     
                     avp_command_listener.status_publisher.publish(String(data="Waiting 10 seconds for vehicle ahead..."))
-
+                    avp_command_listener.status_update_publisher.publish(String(
+                            data=f"{avp_command_listener.vehicle_id}:Waiting 10 seconds for vehicle ahead..."))
+                    time.sleep(2)
 
                     first_in_line = avp_command_listener.current_queue[0]
 
@@ -430,7 +450,10 @@ def main(args=None):
 
                     while waited < 10:
                         loop_start = time.time()
+
                         rclpy.spin_once(avp_command_listener, timeout_sec=0.1)
+                        time.sleep(0.05)
+
                         new_status = avp_command_listener.status_all_data.get(str(first_in_line), "")
 
                         avp_command_listener.get_logger().info(f"Vehicle {first_in_line}'s status after {waited+1} sec: {new_status}")
@@ -448,16 +471,20 @@ def main(args=None):
                         if time_to_wait > 0:
                             time.sleep(time_to_wait)
 
+                    # Final spin to catch any last-millisecond updates
+                    rclpy.spin_once(avp_command_listener, timeout_sec=0.2)
+                    final_status = avp_command_listener.status_all_data.get(str(first_in_line), "")
+
+                    if final_status != last_known_status:
+                        avp_command_listener.get_logger().info(f"[FINAL CHECK] Status changed! {last_known_status} → {final_status}")
+                        if ("Autonomous valet parking started" in final_status or "Waiting for an available parking spot..." in final_status):
+                            front_moved = True
+
                     if front_moved:
-                        avp_command_listener.status_publisher.publish(String(data="Vehicle ahead is preparing to leave. Proceeding..."))
+                        avp_command_listener.status_publisher.publish(String(data="Vehicle ahead is preparing to leave."))
                         avp_command_listener.status_update_publisher.publish(String(
-                            data=f"{avp_command_listener.vehicle_id}:Vehicle ahead preparing to leave. Proceeding..."))
+                            data=f"{avp_command_listener.vehicle_id}:Vehicle ahead preparing to leave."))
                         time.sleep(2)
-
-                        ## Add code to let it move forward before doing the rest
-
-                        ## Also need to display parking until it has arrived
-
 
                         avp_command_listener.handle_owner_exit()
                         drop_off_completed = True
@@ -472,11 +499,16 @@ def main(args=None):
                     
                 else:
                     avp_command_listener.get_logger().info(f"[DEBUG] Vehicle IS first in queue — proceeding with drop-off.")
+                    
                     avp_command_listener.handle_owner_exit()
                     drop_off_completed = True
 
             else:
                 avp_command_listener.get_logger().warn(f"[WARN] Queue is empty!")
+
+                if args.debug:
+                    avp_command_listener.handle_owner_exit()
+                    drop_off_completed = True
 
         if avp_command_listener.start_avp and not avp_command_listener.initiate_parking: 
             # start_avp_clicked = True
@@ -485,9 +517,6 @@ def main(args=None):
             time.sleep(2)
 
             avp_command_listener.initiate_parking = True
-
-            
-        ############### START PARKING SPOT DETECTION ###############
 
         if avp_command_listener.initiate_parking and not parking_complete:
 
@@ -545,7 +574,6 @@ def main(args=None):
                     parking_complete = True
                 
             time.sleep(1)
-        ############### END PARKING SPOT DETECTION #################
 
         if route_state_subscriber.state == 6 and parking_complete and not reserved_cleared:
             avp_command_listener.status_publisher.publish(String(data="Car has been parked."))
