@@ -11,30 +11,12 @@ Responsibilities:
 Topics:
 - /<namespace>/avp/vehicle_count/request : Request to be added to the count (expects String: "add_me")
 - /<namespace>/avp/vehicle_count         : Broadcasts the current global vehicle count (Int32)
-
-To run manually:
-ros2 run avp_managers vehicle_count_manager --ros-args -p namespaces:='["main", "vehicle2"]'
 """
 
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String, Int32
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
-import sys
-
-if '--help' in sys.argv or '-h' in sys.argv:
-    print("""
-Vehicle Count Manager Help
-
-Listens for vehicle count requests and broadcasts count to all vehicle_count topics.
-
-Example usage:
-    ros2 run multi_avp vehicle_count_manager --ros-args -p namespaces:='["main", "vehicle2"]'
-
-Parameters:
-    - namespaces: List of namespaces (e.g., ["main", "vehicle2"])
-    """)
-    sys.exit(0)
 
 def get_topic(namespace, topic):
     """Returns the correct topic string based on namespace."""
@@ -48,7 +30,6 @@ class VehicleCountManager(Node):
         self.initialized = False # Will be set True only if initialization is successful
         self.vehicle_count = 0 # Set initial count to 0
         self.count_publishers = {} # Publisher handles for each namespace
-
 
         # Declare and read the 'namespaces' parameter
         self.declare_parameter(
