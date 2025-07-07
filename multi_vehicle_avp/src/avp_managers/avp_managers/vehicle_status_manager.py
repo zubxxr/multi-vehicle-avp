@@ -11,9 +11,6 @@ Responsibilities:
 Topics:
 - /<namespace>/avp/status/update : Receives status string messages from vehicles.
 - /<namespace>/avp/status/all    : Publishes all known vehicle statuses (String array or dict-style string).
-
-To run manually:
-ros2 run avp_managers vehicle_status_manager --ros-args -p namespaces:='["main", "vehicle2"]'
 """
 
 import rclpy
@@ -21,21 +18,6 @@ from rclpy.node import Node
 from std_msgs.msg import String
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 import json
-import sys
-
-if '--help' in sys.argv or '-h' in sys.argv:
-    print("""
-Vehicle Status Manager Help
-
-Tracks vehicle status updates across namespaces.
-
-Example usage:
-    ros2 run multi_avp vehicle_status_manager --ros-args -p namespaces:='["main", "vehicle2"]'
-
-Parameters:
-    - namespaces: List of namespaces (e.g., ["main", "vehicle2"])
-    """)
-    sys.exit(0)
 
 def get_topic(namespace, topic):
     """Returns topic string based on namespace."""
