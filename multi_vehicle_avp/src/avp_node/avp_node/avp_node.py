@@ -41,9 +41,7 @@ from vehicle.command_listener import AVPCommandListener
 from utils.ros_helpers import run_ros2_command, build_ros2_pub
 from utils.dropoff_and_parking import parking_spot_locations, is_in_drop_off_zone
 
-
 def main(args=None):
-    
     parser = argparse.ArgumentParser(description="Run AVP with a specific vehicle ID.")
     parser.add_argument('--vehicle_id', type=str, required=True, help="Vehicle ID number only (e.g., 1 or 2)")
     parser.add_argument('--debug', type=str, default='false')
@@ -115,7 +113,6 @@ def main(args=None):
     )
     retrieve_vehicle_goal_pose = build_ros2_pub("/planning/mission_planning/goal", "geometry_msgs/msg/PoseStamped", retrieve_payload)
 
-
     leave_area_payload = (
         "{header: {frame_id: 'map'}, "
         "pose: {position: {x: -103.84678649902344, y: -106.02139282226562, z: 0.0}, "
@@ -156,9 +153,6 @@ def main(args=None):
             # print("Drop-off valet destination reached.")
             avp_command_listener.publish_vehicle_status("Arrived at drop-off area.")
 
-
-        # motion_state_subscriber.get_logger().info(f"[DEBUG] Motion Status: {motion_state_subscriber.state}")
-
         if  (
             motion_state_subscriber.state == 1 and 
             not drop_off_completed and
@@ -167,15 +161,12 @@ def main(args=None):
         ):  
             
             if avp_command_listener.current_queue:
-
                 if str(avp_command_listener.current_queue[0]) != str(avp_command_listener.vehicle_id):
 
                     avp_command_listener.get_logger().info(f"[DEBUG] Vehicle is NOT first in queue — waiting for vehicle ahead.")
-                    
                     avp_command_listener.publish_vehicle_status("Waiting 10 seconds for vehicle ahead...")
 
                     first_in_line = avp_command_listener.current_queue[0]
-
                     first_status_of_first_in_line = avp_command_listener.all_vehicle_status.get(str(first_in_line), "")
 
                     waited = 0
@@ -210,7 +201,9 @@ def main(args=None):
 
                     if final_status_of_first_in_line != first_status_of_first_in_line:
                         avp_command_listener.get_logger().info(f"[FINAL CHECK] Status changed! {first_status_of_first_in_line} → {final_status_of_first_in_line}")
-                        if ("Autonomous valet parking started" in final_status_of_first_in_line or "Waiting for an available parking spot..." in final_status_of_first_in_line):
+                        
+                        if ("Autonomous valet parking started" in final_status_of_first_in_line or 
+                            "Waiting for an available parking spot..." in final_status_of_first_in_line):
                             front_car_moved = True
 
                     if front_car_moved:
@@ -254,7 +247,6 @@ def main(args=None):
         if avp_command_listener.initiate_parking and not parking_complete:
 
             rclpy.spin_once(parking_spot_subscriber, timeout_sec=0.1)  
-
             parking_spots = parking_spot_subscriber.available_parking_spots
 
             if parking_spots is None:
@@ -300,7 +292,6 @@ def main(args=None):
 
                     counter += 1
                     chosen_parking_spot = first_spot_in_queue
-
                     parking_complete = True
                 
             time.sleep(1)
@@ -314,7 +305,6 @@ def main(args=None):
             print(f"[AVP] Sent removal request: {msg.data}")
 
             reserved_cleared = True
-
             route_state_subscriber.state = -1
 
         if avp_command_listener.retrieve_vehicle and not retrieve_vehicle_complete:
