@@ -90,17 +90,16 @@ def main(args=None):
     engage_payload = "{engage: True}"
     engage_auto_mode = build_ros2_pub("/autoware/engage", "autoware_vehicle_msgs/msg/Engage", engage_payload)
     
-    if args.debug:
-        initial_pose_payload = (
-            "{header: {frame_id: 'map'}, "
-            "pose: {pose: {position: {x: -111.28318786621094, y: -80.02529907226562, z: 0.0}, "
-            "orientation: {x: 0.0, y: 0.0, z: 0.7889132779275692, w: 0.614504548322938}}, "
-            "covariance: [0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, "
-            "0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "
-            "0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.06853891909122467]}"
-            "}"
-        )
-        set_initial_pose = build_ros2_pub("/initialpose", "geometry_msgs/msg/PoseWithCovarianceStamped", initial_pose_payload)
+    initial_pose_payload = (
+        "{header: {frame_id: 'map'}, "
+        "pose: {pose: {position: {x: -111.28318786621094, y: -80.02529907226562, z: 0.0}, "
+        "orientation: {x: 0.0, y: 0.0, z: 0.7889132779275692, w: 0.614504548322938}}, "
+        "covariance: [0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, "
+        "0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "
+        "0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.06853891909122467]}"
+        "}"
+    )
+    set_initial_pose = build_ros2_pub("/initialpose", "geometry_msgs/msg/PoseWithCovarianceStamped", initial_pose_payload)
 
     drop_off_payload = (
         "{header: {frame_id: 'map'}, "
@@ -130,20 +129,16 @@ def main(args=None):
 
     counter = 0
     chosen_parking_spot = None
-    drop_off_flag = True
+    drop_off_flag = True ####################################
     drop_off_completed = False
     parking_complete = False
     retrieve_vehicle_complete = False
     reserved_cleared = False
     left_for_new_destination = False
 
-    
     while rclpy.ok():
-
-
         if not avp_command_listener.status_initialized:
-            avp_command_listener.status_publisher.publish(String(data="Arrived at location."))
-            avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Arrived at location."))
+            avp_command_listener.publish_vehicle_status("Arrived at location.")
             avp_command_listener.status_initialized = True
 
         # If "Head to drop off" is clicked
@@ -159,8 +154,7 @@ def main(args=None):
             is_in_drop_off_zone(avp_command_listener.ego_x, avp_command_listener.ego_y)
         ):
             # print("Drop-off valet destination reached.")
-            avp_command_listener.status_publisher.publish(String(data="Arrived at drop-off area."))
-            avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Arrived at drop-off area."))
+            avp_command_listener.publish_vehicle_status("Arrived at drop-off area.")
 
 
         # motion_state_subscriber.get_logger().info(f"[DEBUG] Motion Status: {motion_state_subscriber.state}")
@@ -172,21 +166,17 @@ def main(args=None):
             is_in_drop_off_zone(avp_command_listener.ego_x, avp_command_listener.ego_y)
         ):  
             
-            
             if avp_command_listener.current_queue:
 
                 if str(avp_command_listener.current_queue[0]) != str(avp_command_listener.vehicle_id):
 
                     avp_command_listener.get_logger().info(f"[DEBUG] Vehicle is NOT first in queue — waiting for vehicle ahead.")
                     
-                    avp_command_listener.status_publisher.publish(String(data="Waiting 10 seconds for vehicle ahead..."))
-                    avp_command_listener.status_update_publisher.publish(String(
-                            data=f"{avp_command_listener.vehicle_id}:Waiting 10 seconds for vehicle ahead..."))
-                    time.sleep(2)
+                    avp_command_listener.publish_vehicle_status("Waiting 10 seconds for vehicle ahead...")
 
                     first_in_line = avp_command_listener.current_queue[0]
 
-                    first_status_of_first_in_line = avp_command_listener.status_all_data.get(str(first_in_line), "")
+                    first_status_of_first_in_line = avp_command_listener.all_vehicle_status.get(str(first_in_line), "")
 
                     waited = 0
                     front_car_moved = False
@@ -197,7 +187,7 @@ def main(args=None):
                         rclpy.spin_once(avp_command_listener, timeout_sec=0.1)
                         time.sleep(0.05)
 
-                        next_status_of_first_in_line = avp_command_listener.status_all_data.get(str(first_in_line), "")
+                        next_status_of_first_in_line = avp_command_listener.all_vehicle_status.get(str(first_in_line), "")
 
                         avp_command_listener.get_logger().info(f"Vehicle {first_in_line}'s status after {waited+1} sec: {next_status_of_first_in_line}")
 
@@ -216,7 +206,7 @@ def main(args=None):
 
                     # Final spin to catch any last-millisecond updates
                     rclpy.spin_once(avp_command_listener, timeout_sec=0.2)
-                    final_status_of_first_in_line = avp_command_listener.status_all_data.get(str(first_in_line), "")
+                    final_status_of_first_in_line = avp_command_listener.all_vehicle_status.get(str(first_in_line), "")
 
                     if final_status_of_first_in_line != first_status_of_first_in_line:
                         avp_command_listener.get_logger().info(f"[FINAL CHECK] Status changed! {first_status_of_first_in_line} → {final_status_of_first_in_line}")
@@ -224,15 +214,10 @@ def main(args=None):
                             front_car_moved = True
 
                     if front_car_moved:
-                        avp_command_listener.status_publisher.publish(String(data="Vehicle ahead is preparing to leave."))
-                        avp_command_listener.status_update_publisher.publish(String(
-                            data=f"{avp_command_listener.vehicle_id}:Vehicle ahead preparing to leave."))
+                        avp_command_listener.publish_vehicle_status("Vehicle ahead is preparing to leave.")
                         time.sleep(2)
 
-                        avp_command_listener.status_publisher.publish(String(data="Moving up in queue..."))
-                        avp_command_listener.status_update_publisher.publish(
-                            String(data=f"{avp_command_listener.vehicle_id}:Moving up in queue...")
-                        )
+                        avp_command_listener.publish_vehicle_status("Moving up in queue...")
                         
                         # Wait until car has fully arrived at start of drop off zone
                         while route_state_subscriber.state != 6:
@@ -242,13 +227,11 @@ def main(args=None):
                         drop_off_completed = True
 
                     else:
-                        avp_command_listener.status_publisher.publish(String(data="Vehicle(s) ahead are still stationary. Proceeding with drop-off."))
-                        avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Vehicle(s) ahead are still stationary. Proceeding with drop-off."))
+                        avp_command_listener.publish_vehicle_status("Vehicle(s) ahead are still stationary. Proceeding with drop-off.")
                         time.sleep(2)
                         avp_command_listener.handle_owner_exit()
                         drop_off_completed = True
 
-                    
                 else:
                     avp_command_listener.get_logger().info(f"[DEBUG] Vehicle IS first in queue — proceeding with drop-off.")
                     
@@ -263,9 +246,7 @@ def main(args=None):
                     drop_off_completed = True
 
         if avp_command_listener.start_avp and not avp_command_listener.initiate_parking: 
-            # start_avp_clicked = True
-            avp_command_listener.status_publisher.publish(String(data="Autonomous valet parking started..."))
-            avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Autonomous valet parking started..."))
+            avp_command_listener.publish_vehicle_status("Autonomous valet parking started...")
             time.sleep(2)
 
             avp_command_listener.initiate_parking = True
@@ -277,8 +258,7 @@ def main(args=None):
             parking_spots = parking_spot_subscriber.available_parking_spots
 
             if parking_spots is None:
-                avp_command_listener.status_publisher.publish(String(data="Waiting for an available parking spot..."))
-                avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Waiting for an available parking spot..."))
+                avp_command_listener.publish_vehicle_status("Waiting for an available parking spot...")
                 time.sleep(2)
 
             if parking_spots is not None:
@@ -292,11 +272,9 @@ def main(args=None):
                     # Printing the first value
                     print('\nAvailable parking spot found: %s' % first_spot_in_queue)
 
-                    avp_command_listener.status_publisher.publish(String(data="Available parking spot found."))
-                    avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Available parking spot found."))
+                    avp_command_listener.publish_vehicle_status("Available parking spot found.")
                     time.sleep(2)
-                    avp_command_listener.status_publisher.publish(String(data=f"Parking in Spot {first_spot_in_queue}."))
-                    avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Parking in Spot {first_spot_in_queue}."))
+                    avp_command_listener.publish_vehicle_status(f"Parking in Spot {first_spot_in_queue}.")
 
                     parking_spot_goal_pose_command = parking_spot_locations[first_spot_in_queue]
                     run_ros2_command(parking_spot_goal_pose_command)
@@ -328,8 +306,7 @@ def main(args=None):
             time.sleep(1)
 
         if route_state_subscriber.state == 6 and parking_complete and not reserved_cleared:
-            avp_command_listener.status_publisher.publish(String(data="Car has been parked."))
-            avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Car has been parked."))
+            avp_command_listener.publish_vehicle_status("Car has been parked.")
 
             msg = String()
             msg.data = str(chosen_parking_spot)
@@ -342,24 +319,19 @@ def main(args=None):
 
         if avp_command_listener.retrieve_vehicle and not retrieve_vehicle_complete:
             print("Going to Drop Off Zone.")
-            avp_command_listener.status_publisher.publish(String(data="Car is called for retrieval."))
-            avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Car is called for retrieval."))
+            avp_command_listener.publish_vehicle_status("Car is called for retrieval.")
             run_ros2_command(retrieve_vehicle_goal_pose)
             run_ros2_command(engage_auto_mode)
             retrieve_vehicle_complete = True
         
         if route_state_subscriber.state == 6 and retrieve_vehicle_complete and left_for_new_destination:
-                avp_command_listener.status_publisher.publish(String(data="Car has been retrieved."))
-                avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Car has been retrieved."))
+                avp_command_listener.publish_vehicle_status("Car has been retrieved.")
                 time.sleep(2)
-                avp_command_listener.status_publisher.publish(String(data="Owner is getting in..."))
-                avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Owner is getting in..."))
+                avp_command_listener.publish_vehicle_status("Owner is getting in...")
                 time.sleep(2)
-                avp_command_listener.status_publisher.publish(String(data="Owner is inside."))
-                avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Owner is inside."))
+                avp_command_listener.publish_vehicle_status("Owner is inside.")
                 time.sleep(2)
-                avp_command_listener.status_publisher.publish(String(data="Leaving to new destination."))
-                avp_command_listener.status_update_publisher.publish(String(data=f"{avp_command_listener.vehicle_id}:Leaving to new destination."))
+                avp_command_listener.publish_vehicle_status("Leaving to new destination.")
                 run_ros2_command(leave_area_goal_pose)
                 left_for_new_destination = True
 
