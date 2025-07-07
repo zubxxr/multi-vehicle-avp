@@ -51,11 +51,12 @@ class VehicleCountManager(Node):
 
         # Setup publishers and subscribers per namespace
         for ns in self.namespaces:
-            topic = get_topic(ns, "avp/vehicle_count")
-            self.count_publishers[ns] = self.create_publisher(Int32, topic, 10)
-
             request_topic = get_topic(ns, "avp/vehicle_count/request")
+            count_topic = get_topic(ns, "avp/vehicle_count")
+
             self.create_subscription(String, request_topic, self.generate_callback(ns), 10)
+            self.count_publishers[ns] = self.create_publisher(Int32, count_topic, 10)
+
             self.get_logger().info(f"Listening on: {request_topic}")
 
         # Timer to re-broadcast current count every second
