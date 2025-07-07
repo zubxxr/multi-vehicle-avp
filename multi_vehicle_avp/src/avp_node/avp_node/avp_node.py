@@ -209,6 +209,8 @@ class AVPCommandListener(Node):
             self.current_queue = []
 
     def handle_owner_exit(self):
+        
+        
         self.status_publisher.publish(String(data="Owner is exiting..."))
         self.status_update_publisher.publish(
             String(data=f"{self.vehicle_id}:Owner is exiting...")
@@ -454,10 +456,10 @@ def main(args=None):
 
                     first_in_line = avp_command_listener.current_queue[0]
 
-                    last_known_status = avp_command_listener.status_all_data.get(str(first_in_line), "")
+                    first_status_of_first_in_line = avp_command_listener.status_all_data.get(str(first_in_line), "")
 
                     waited = 0
-                    front_moved = False
+                    front_car_moved = False
 
                     while waited < 10:
                         loop_start = time.time()
@@ -465,17 +467,17 @@ def main(args=None):
                         rclpy.spin_once(avp_command_listener, timeout_sec=0.1)
                         time.sleep(0.05)
 
-                        new_status = avp_command_listener.status_all_data.get(str(first_in_line), "")
+                        next_status_of_first_in_line = avp_command_listener.status_all_data.get(str(first_in_line), "")
 
-                        avp_command_listener.get_logger().info(f"Vehicle {first_in_line}'s status after {waited+1} sec: {new_status}")
+                        avp_command_listener.get_logger().info(f"Vehicle {first_in_line}'s status after {waited+1} sec: {next_status_of_first_in_line}")
 
-                        if new_status != last_known_status:
-                            avp_command_listener.get_logger().info(f"Status changed! {last_known_status} → {new_status}")
-                            if ("Autonomous valet parking started" in new_status or "Waiting for an available parking spot..." in new_status):
-                                front_moved = True
+                        if next_status_of_first_in_line != first_status_of_first_in_line:
+                            avp_command_listener.get_logger().info(f"Status changed! {first_status_of_first_in_line} → {next_status_of_first_in_line}")
+                            if ("Autonomous valet parking started" in next_status_of_first_in_line or "Waiting for an available parking spot..." in next_status_of_first_in_line):
+                                front_car_moved = True
                                 break
                                 
-                        last_known_status = new_status
+                        first_status_of_first_in_line = next_status_of_first_in_line
                         waited += 1
 
                         time_to_wait = 1.0 - (time.time() - loop_start)
@@ -484,25 +486,28 @@ def main(args=None):
 
                     # Final spin to catch any last-millisecond updates
                     rclpy.spin_once(avp_command_listener, timeout_sec=0.2)
-                    final_status = avp_command_listener.status_all_data.get(str(first_in_line), "")
+                    final_status_of_first_in_line = avp_command_listener.status_all_data.get(str(first_in_line), "")
 
-                    if final_status != last_known_status:
-                        avp_command_listener.get_logger().info(f"[FINAL CHECK] Status changed! {last_known_status} → {final_status}")
-                        if ("Autonomous valet parking started" in final_status or "Waiting for an available parking spot..." in final_status):
-                            front_moved = True
+                    if final_status_of_first_in_line != first_status_of_first_in_line:
+                        avp_command_listener.get_logger().info(f"[FINAL CHECK] Status changed! {first_status_of_first_in_line} → {final_status_of_first_in_line}")
+                        if ("Autonomous valet parking started" in final_status_of_first_in_line or "Waiting for an available parking spot..." in final_status_of_first_in_line):
+                            front_car_moved = True
 
-                    if front_moved:
+                    if front_car_moved:
                         avp_command_listener.status_publisher.publish(String(data="Vehicle ahead is preparing to leave."))
                         avp_command_listener.status_update_publisher.publish(String(
                             data=f"{avp_command_listener.vehicle_id}:Vehicle ahead preparing to leave."))
                         time.sleep(2)
 
-
-
-                        # LOGIC HERE. Goes right to letting owner exit.
-                        ## need to first let it move up in queue, then let owner exit type
-
-
+                        avp_command_listener.status_publisher.publish(String(data="Moving up in queue..."))
+                        avp_command_listener.status_update_publisher.publish(
+                            String(data=f"{avp_command_listener.vehicle_id}:Moving up in queue...")
+                        )
+                        
+                        # Wait until car has fully arrived at start of drop off zone
+                        while route_state_subscriber.state != 6:
+                            rclpy.spin_once(route_state_subscriber, timeout_sec=0.2)
+                        
                         avp_command_listener.handle_owner_exit()
                         drop_off_completed = True
 
