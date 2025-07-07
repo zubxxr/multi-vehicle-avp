@@ -270,11 +270,11 @@ def main(args=None):
                         avp_command_listener.reserved_spots_list.append(first_spot_in_queue)
                         avp_command_listener.get_logger().info(f"[AVP] Sent reservation request: {str(first_spot_in_queue)}")
                     else:
-                        avp_command_listener.get_logger().info(f"[AVP] Spot {first_spot_in_queue} already requested.")
+                        avp_command_listener.get_logger().info(f"[AVP] Spot {str(first_spot_in_queue)} already requested.")
 
                     route_state_subscriber.state = -1
 
-                    avp_command_listener.get_logger().info('Setting goal pose to parking spot:', first_spot_in_queue)
+                    avp_command_listener.get_logger().info(f"[AVP] Setting goal pose to parking spot: {str(first_spot_in_queue)})")
 
                     counter += 1
                     chosen_parking_spot = first_spot_in_queue
@@ -309,6 +309,7 @@ def main(args=None):
                 avp_command_listener.publish_vehicle_status("Leaving to new destination.")
 
                 run_ros2_command(leave_area_goal_pose)
+                run_ros2_command(engage_autonomous_mode)
                 leave_for_new_destination = True
 
         rclpy.spin_once(route_state_subscriber, timeout_sec=1)
