@@ -116,12 +116,13 @@ def main(args=None):
 
     counter = 0
     chosen_parking_spot = None
-    drop_off_flag = True ####################################
+
+    drop_off_triggered = False
     drop_off_completed = False
     parking_complete = False
     retrieve_vehicle_complete = False
-    reserved_cleared = False
-    left_for_new_destination = False
+    reserved_spot_cleared = False
+    leave_for_new_destination = False
 
     while rclpy.ok():
         if not avp_command_listener.status_initialized:
@@ -129,10 +130,10 @@ def main(args=None):
             avp_command_listener.status_initialized = True
 
         # If "Head to drop off" is clicked
-        if drop_off_flag and avp_command_listener.head_to_drop_off:
+        if not drop_off_triggered and avp_command_listener.head_to_drop_off:
             run_ros2_command(head_to_drop_off)
             run_ros2_command(engage_autonomous_mode)
-            drop_off_flag = False
+            drop_off_triggered = True
 
         if (    
             not avp_command_listener.initiate_parking and
@@ -191,8 +192,7 @@ def main(args=None):
                     if final_status_of_first_in_line != first_status_of_first_in_line:
                         avp_command_listener.get_logger().info(f"[FINAL CHECK] Status changed! {first_status_of_first_in_line} → {final_status_of_first_in_line}")
                         
-                        if ("Autonomous valet parking started" in final_status_of_first_in_line or 
-                            "Waiting for an available parking spot..." in final_status_of_first_in_line):
+                        if ("On standby..." not in final_status_of_first_in_line):
                             front_car_moved = True
 
                     if front_car_moved:
@@ -282,13 +282,13 @@ def main(args=None):
                 
             time.sleep(1)
 
-        if route_state_subscriber.state == 6 and parking_complete and not reserved_cleared:
+        if route_state_subscriber.state == 6 and parking_complete and not reserved_spot_cleared:
             avp_command_listener.publish_vehicle_status("Car has been parked.")
 
             avp_command_listener.reserved_spot_remove_pub.publish(String(data=str(chosen_parking_spot)))
             avp_command_listener.get_logger().info(f"[AVP] Sent removal request: {str(chosen_parking_spot)}")
 
-            reserved_cleared = True
+            reserved_spot_cleared = True
             route_state_subscriber.state = -1
 
         if avp_command_listener.retrieve_vehicle and not retrieve_vehicle_complete:
@@ -299,7 +299,7 @@ def main(args=None):
             run_ros2_command(engage_autonomous_mode)
             retrieve_vehicle_complete = True
         
-        if route_state_subscriber.state == 6 and retrieve_vehicle_complete and left_for_new_destination:
+        if route_state_subscriber.state == 6 and retrieve_vehicle_complete and not leave_for_new_destination:
                 avp_command_listener.publish_vehicle_status("Car has been retrieved.")
                 time.sleep(2)
                 avp_command_listener.publish_vehicle_status("Owner is getting in...")
@@ -309,7 +309,7 @@ def main(args=None):
                 avp_command_listener.publish_vehicle_status("Leaving to new destination.")
 
                 run_ros2_command(leave_area_goal_pose)
-                left_for_new_destination = True
+                leave_for_new_destination = True
 
         rclpy.spin_once(route_state_subscriber, timeout_sec=1)
         rclpy.spin_once(motion_state_subscriber, timeout_sec=1)
