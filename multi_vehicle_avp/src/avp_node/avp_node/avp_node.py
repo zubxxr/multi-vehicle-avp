@@ -218,12 +218,23 @@ class AVPCommandListener(Node):
         self.status_update_publisher.publish(
             String(data=f"{self.vehicle_id}:Owner has exited...")
         )
-        time.sleep(2)
+        # time.sleep(2)
+
+        self.get_logger().info(f"[DEBUG 1] Route Status: {self.route_state_subscriber.state}")
+
 
         rclpy.spin_once(self.route_state_subscriber, timeout_sec=1)
 
-        # self.get_logger().info(f"[DEBUG] Route Status: {self.route_state_subscriber.state}")
+        self.get_logger().info(f"[DEBUG 2] Route Status: {self.route_state_subscriber.state}")
 
+        if self.route_state_subscriber.state == 6:
+            self.get_logger().info(f"[DEBUG] Reached state 6 after spin_once.")
+            self.status_publisher.publish(String(data="On standby..."))
+            self.status_update_publisher.publish(
+                String(data=f"{self.vehicle_id}:On standby...")
+            )
+            return True
+        
         
         # Keep retrying until route state == 6
         while self.route_state_subscriber.state != 6:
