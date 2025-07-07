@@ -6,13 +6,10 @@ from std_msgs.msg import String
 class ParkingSpotSubscriber(Node):
     def __init__(self, args):
         super().__init__(f'parking_spot_subscriber_{args.vehicle_id}')
+        
         self.available_parking_spots = None
 
-        self.subscription = self.create_subscription(
-            String,
-            '/avp/parking_spots',
-            self.available_parking_spots_callback,
-            1)
+        self.parking_spots_subscription = self.create_subscription(String, '/avp/parking_spots', self.available_parking_spots_callback, 1)
 
     def available_parking_spots_callback(self, msg):
         self.available_parking_spots = msg.data
@@ -20,11 +17,13 @@ class ParkingSpotSubscriber(Node):
 class RouteStateSubscriber(Node):
     def __init__(self, args):
         super().__init__(f'route_state_subscriber_{args.vehicle_id}')
+        
         self.subscription = self.create_subscription(
             RouteState,
             '/planning/mission_planning/route_selector/main/state',
             self.route_state_callback,
             10)
+        
         self.flag = False
         self.state = -1
 
@@ -35,11 +34,9 @@ class RouteStateSubscriber(Node):
 class MotionStateSubscriber(Node):
     def __init__(self, args):
         super().__init__(f'motion_state_subscriber_{args.vehicle_id}')
-        self.subscription = self.create_subscription(
-            MotionState,
-            '/api/motion/state',
-            self.motion_state_callback,
-            10)
+
+        self.subscription = self.create_subscription(MotionState, '/api/motion/state', self.motion_state_callback, 10)
+        
         self.flag = False
         self.state = -1
 
