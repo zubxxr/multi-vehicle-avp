@@ -35,7 +35,6 @@ import rclpy
 from std_msgs.msg import String
 import argparse
 import time
-
 from vehicle.state_subscribers import RouteStateSubscriber, MotionStateSubscriber, ParkingSpotSubscriber
 from vehicle.command_listener import AVPCommandListener
 from utils.ros_helpers import run_ros2_command, build_ros2_pub
@@ -54,39 +53,6 @@ def main(args=None):
     motion_state_subscriber = MotionStateSubscriber(args)
     avp_command_listener = AVPCommandListener(route_state_subscriber, motion_state_subscriber, args)
     parking_spot_subscriber = ParkingSpotSubscriber(args)
-    reserved_spots_publisher = avp_command_listener.create_publisher(String, '/parking_spots/reserved', 10)
-
-    ## Timeout is needed to wait for the vehicle count request subscriber sent from the central manager node
-    ## This is due to high traffic in Zenoh and subscribers/publishers coming in at random
-    timeout = 15
-    if args.debug: # if debug is true, that means planning simulator is used, meaning less traffic, so 5 is sufficient
-        timeout = 5
-    else: 
-        timeout = 15
-
-    while avp_command_listener.vehicle_count_request_pub.get_subscription_count() == 0 and timeout > 0:
-        avp_command_listener.get_logger().info("Waiting for /avp/vehicle_count/request subscriber...")
-        time.sleep(1)
-        timeout -= 1
-
-    avp_command_listener.vehicle_id_pub.publish(String(data=str(avp_command_listener.vehicle_id)))
-
-    msg = String()
-    msg.data = "add_me"
-    avp_command_listener.vehicle_count_request_pub.publish(msg)
-    print("[REQUEST] Sent vehicle_count_request to manager")
-
-    # Send initial "N/A" reserved spot
-    na_msg = String()
-    na_msg.data = "[]"
-    reserved_spots_publisher.publish(na_msg)
-
-    # Send initial "N/A" drop-off queue
-    dropoff_queue_msg = String()
-    dropoff_queue_msg.data = "Drop-off Queue: []"
-
-    engage_payload = "{engage: True}"
-    engage_auto_mode = build_ros2_pub("/autoware/engage", "autoware_vehicle_msgs/msg/Engage", engage_payload)
     
     initial_pose_payload = (
         "{header: {frame_id: 'map'}, "
@@ -97,6 +63,7 @@ def main(args=None):
         "0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.06853891909122467]}"
         "}"
     )
+
     set_initial_pose = build_ros2_pub("/initialpose", "geometry_msgs/msg/PoseWithCovarianceStamped", initial_pose_payload)
 
     drop_off_payload = (
@@ -111,6 +78,7 @@ def main(args=None):
         "pose: {position: {x: -105.69026947021484, y: -57.27252960205078, z: 0.0}, "
         "orientation: {x: 0.0, y: 0.0, z: -0.9927605445395801, w: 0.12011037093222368}}}"
     )
+    
     retrieve_vehicle_goal_pose = build_ros2_pub("/planning/mission_planning/goal", "geometry_msgs/msg/PoseStamped", retrieve_payload)
 
     leave_area_payload = (
@@ -120,7 +88,29 @@ def main(args=None):
     )
     leave_area_goal_pose = build_ros2_pub("/planning/mission_planning/goal", "geometry_msgs/msg/PoseStamped", leave_area_payload)
 
-    # Simulate AWSIM initial pose
+    engage_autonomous_mode = build_ros2_pub("/autoware/engage", "autoware_vehicle_msgs/msg/Engage", "{engage: True}")
+
+    # Timeout is needed to wait for the vehicle count request subscriber sent from the central manager node
+    # This is due to high traffic in Zenoh and subscribers/publishers coming in at random
+    timeout = 15
+    if args.debug: # if debug is true, that means planning simulator is used, meaning less traffic, so 5 is sufficient
+        timeout = 5
+    else: 
+        timeout = 15
+    
+    while avp_command_listener.vehicle_count_request_pub.get_subscription_count() == 0 and timeout > 0:
+        avp_command_listener.get_logger().info("Waiting for /avp/vehicle_count/request subscriber...")
+        time.sleep(1)
+        timeout -= 1
+
+    # Send vehicle ID
+    avp_command_listener.vehicle_id_pub.publish(String(data=str(avp_command_listener.vehicle_id)))
+
+    # Send request to add vehicle and increment count
+    avp_command_listener.vehicle_count_request_pub.publish(String(data="add_me"))
+    avp_command_listener.get_logger().info("[REQUEST] Sent vehicle_count_request to manager")
+
+    # if debug is True, then planning simulator is being used, so it will not receive initial pose from AWSIM
     if args.debug:
         run_ros2_command(set_initial_pose)
 
@@ -141,7 +131,7 @@ def main(args=None):
         # If "Head to drop off" is clicked
         if drop_off_flag and avp_command_listener.head_to_drop_off:
             run_ros2_command(head_to_drop_off)
-            run_ros2_command(engage_auto_mode)
+            run_ros2_command(engage_autonomous_mode)
             drop_off_flag = False
 
         if (    
@@ -150,7 +140,6 @@ def main(args=None):
             avp_command_listener.ego_x is not None and
             is_in_drop_off_zone(avp_command_listener.ego_x, avp_command_listener.ego_y)
         ):
-            # print("Drop-off valet destination reached.")
             avp_command_listener.publish_vehicle_status("Arrived at drop-off area.")
 
         if  (
@@ -258,11 +247,11 @@ def main(args=None):
 
                 if first_spot_in_queue != chosen_parking_spot:
                     if counter == 1:
-                        print('\nParking spot #%s was taken.' % chosen_parking_spot)
+                        avp_command_listener.get_logger().info('\nParking spot #%s was taken.' % chosen_parking_spot)
                         counter = 0
 
                     # Printing the first value
-                    print('\nAvailable parking spot found: %s' % first_spot_in_queue)
+                    avp_command_listener.get_logger().info('\nAvailable parking spot found: %s' % first_spot_in_queue)
 
                     avp_command_listener.publish_vehicle_status("Available parking spot found.")
                     time.sleep(2)
@@ -270,25 +259,22 @@ def main(args=None):
 
                     parking_spot_goal_pose_command = parking_spot_locations[first_spot_in_queue]
                     run_ros2_command(parking_spot_goal_pose_command)
-                    run_ros2_command(engage_auto_mode)
+                    run_ros2_command(engage_autonomous_mode)
 
-                    queue_msg = String()
-                    queue_msg.data = avp_command_listener.vehicle_id
-                    avp_command_listener.queue_remove_pub.publish(queue_msg)
-                    print(f"[QUEUE] Sent queue removal request for {queue_msg.data}")
+                    avp_command_listener.queue_remove_pub.publish(String(data=avp_command_listener.vehicle_id))
+                    avp_command_listener.get_logger().info(f"[QUEUE] Sent queue removal request for {avp_command_listener.vehicle_id}")
 
                     if first_spot_in_queue not in avp_command_listener.reserved_spots_list:
-                        msg = String()
-                        msg.data = str(first_spot_in_queue)
-                        avp_command_listener.reserved_spot_request_pub.publish(msg)
+
+                        avp_command_listener.reserved_spot_request_pub.publish(String(data=str(first_spot_in_queue)))
                         avp_command_listener.reserved_spots_list.append(first_spot_in_queue)
-                        print(f"[AVP] Sent reservation request: {msg.data}")
+                        avp_command_listener.get_logger().info(f"[AVP] Sent reservation request: {str(first_spot_in_queue)}")
                     else:
-                        print(f"[AVP] Spot {first_spot_in_queue} already requested.")
+                        avp_command_listener.get_logger().info(f"[AVP] Spot {first_spot_in_queue} already requested.")
 
                     route_state_subscriber.state = -1
 
-                    print('Setting goal pose to parking spot:', first_spot_in_queue)
+                    avp_command_listener.get_logger().info('Setting goal pose to parking spot:', first_spot_in_queue)
 
                     counter += 1
                     chosen_parking_spot = first_spot_in_queue
@@ -299,19 +285,18 @@ def main(args=None):
         if route_state_subscriber.state == 6 and parking_complete and not reserved_cleared:
             avp_command_listener.publish_vehicle_status("Car has been parked.")
 
-            msg = String()
-            msg.data = str(chosen_parking_spot)
-            avp_command_listener.reserved_spot_remove_pub.publish(msg)
-            print(f"[AVP] Sent removal request: {msg.data}")
+            avp_command_listener.reserved_spot_remove_pub.publish(String(data=str(chosen_parking_spot)))
+            avp_command_listener.get_logger().info(f"[AVP] Sent removal request: {str(chosen_parking_spot)}")
 
             reserved_cleared = True
             route_state_subscriber.state = -1
 
         if avp_command_listener.retrieve_vehicle and not retrieve_vehicle_complete:
-            print("Going to Drop Off Zone.")
+            avp_command_listener.get_logger().info("Going to Drop Off Zone.")
             avp_command_listener.publish_vehicle_status("Car is called for retrieval.")
+            
             run_ros2_command(retrieve_vehicle_goal_pose)
-            run_ros2_command(engage_auto_mode)
+            run_ros2_command(engage_autonomous_mode)
             retrieve_vehicle_complete = True
         
         if route_state_subscriber.state == 6 and retrieve_vehicle_complete and left_for_new_destination:
@@ -322,6 +307,7 @@ def main(args=None):
                 avp_command_listener.publish_vehicle_status("Owner is inside.")
                 time.sleep(2)
                 avp_command_listener.publish_vehicle_status("Leaving to new destination.")
+
                 run_ros2_command(leave_area_goal_pose)
                 left_for_new_destination = True
 
