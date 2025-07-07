@@ -1,4 +1,9 @@
 # GURTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+```bash
+pkill -9 -f avp_node
+pkill -9 -f avp_managers
+pkill -9 -f ros2
+```
 
 ```bash
 ros2 run rqt_image_view rqt_image_view
@@ -84,8 +89,9 @@ cd $HOME/Multi-AVP/multi_vehicle_avp/
 source $HOME/autoware/install/setup.bash
 source /opt/ros/humble/setup.bash
 source install/setup.bash
-ros2 launch avp_node multi_avp_launch.py vehicle_id:=2 enable_managers:=false debug:=true
+ros2 launch avp_node multi_avp_launch.py vehicle_id:=2 enable_managers:=false namespaces:='[main, vehicle2]' debug:=false
 ```
+> NOT SURE IF I NEED THE NAMESPACES OR NOT
 > Check Debug Flag
 
 

@@ -25,6 +25,7 @@ setup(
             'drop_off_zone_queue_manager = avp_managers.drop_off_zone_queue_manager:main',
             'parking_spot_reservation_manager = avp_managers.parking_spot_reservation_manager:main',
             'vehicle_count_manager = avp_managers.vehicle_count_manager:main',
+            'vehicle_status_manager = avp_managers.vehicle_status_manager:main',
         ],
     },
 )

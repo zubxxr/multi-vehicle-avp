@@ -10,15 +10,7 @@ def generate_launch_description():
     avp_file = LaunchConfiguration('avp_file')
     vehicle_id = LaunchConfiguration('vehicle_id')
     enable_managers = LaunchConfiguration('enable_managers')
-    echo_avp = LaunchConfiguration('echo_avp')
-
-    # Condition: echo if managers are disabled AND echo_avp is not explicitly false
-    echo_condition = IfCondition(
-        PythonExpression([
-            '"', enable_managers, '" == "false" and ("', echo_avp, '" == "true" or "', echo_avp, '" == "auto")'
-        ])
-    )
-
+    
     script_path = PathJoinSubstitution([
         FindPackageShare('avp_node'),
         'scripts',
@@ -58,11 +50,9 @@ def generate_launch_description():
             description='Set to true to use planning simulator for debugging'
         ),
 
-        # Only runs if enable_managers is false and echo_avp is true or auto
         ExecuteProcess(
             cmd=['bash', script_path],
             output='screen',
-            condition=echo_condition
         ),
 
         # Manager Nodes
@@ -86,6 +76,15 @@ def generate_launch_description():
             package='avp_managers',
             executable='vehicle_count_manager',
             name='vehicle_count_manager',
+            output='screen',
+            arguments=['--ros-args', '-p', ['namespaces:=', LaunchConfiguration('namespaces')]],
+            condition=IfCondition(enable_managers)
+        ),
+
+        Node(
+            package='avp_managers',
+            executable='vehicle_status_manager',
+            name='vehicle_status_manager',
             output='screen',
             arguments=['--ros-args', '-p', ['namespaces:=', LaunchConfiguration('namespaces')]],
             condition=IfCondition(enable_managers)
