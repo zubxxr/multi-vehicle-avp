@@ -37,10 +37,9 @@ import argparse
 import time
 
 from vehicle.state_subscribers import RouteStateSubscriber, MotionStateSubscriber, ParkingSpotSubscriber
-from vehicle.controller import AVPCommandListener
-from utils.ros import run_ros2_command, build_ros2_pub
-from utils.geometry import parking_spot_locations, is_in_drop_off_zone
-
+from vehicle.command_listener import AVPCommandListener
+from utils.ros_helpers import run_ros2_command, build_ros2_pub
+from utils.dropoff_and_parking import parking_spot_locations, is_in_drop_off_zone
 
 def main(args=None):
     

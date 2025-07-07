@@ -2,7 +2,7 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 from nav_msgs.msg import Odometry
-from utils.geometry import is_in_drop_off_zone
+from utils.dropoff_and_parking import is_in_drop_off_zone
 import time
 
 
