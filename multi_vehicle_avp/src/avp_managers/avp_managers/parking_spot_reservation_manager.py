@@ -56,14 +56,14 @@ class ReservationManager(Node):
         for ns in self.namespaces:
             request_topic = get_topic(ns, "avp/reserved_parking_spots/request")
             remove_topic = get_topic(ns, "avp/reserved_parking_spots/remove")
-            reserved_topic = get_topic(ns, "avp/reserved_parking_spots")
+            reserved_spots_topic = get_topic(ns, "avp/reserved_parking_spots")
 
             self.create_subscription(String, request_topic, self.generate_request_callback(ns), 10)
             self.create_subscription(String, remove_topic, self.generate_remove_callback(ns), 10)
-            self.reserved_publishers[ns] = self.create_publisher(String, reserved_topic, 10)
+            self.reserved_publishers[ns] = self.create_publisher(String, reserved_spots_topic, 10)
 
             self.get_logger().info(f"Listening on: {request_topic}, {remove_topic}")
-            self.get_logger().info(f"Publishing to: {reserved_topic}")
+            self.get_logger().info(f"Publishing to: {reserved_spots_topic}")
 
         self.initialized = True
 
