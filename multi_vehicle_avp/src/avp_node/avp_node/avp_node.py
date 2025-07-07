@@ -103,7 +103,7 @@ def generate_uuid():
     return UUID(uuid=list(uuid.uuid4().bytes))
 
 class AVPCommandListener(Node):
-    def __init__(self, route_state_subscriber, args):
+    def __init__(self, route_state_subscriber, motion_state_subscriber, args):
         super().__init__(f'avp_command_listener_{args.vehicle_id}')
 
         self.vehicle_id = args.vehicle_id
@@ -111,6 +111,7 @@ class AVPCommandListener(Node):
         self.reserved_spots_list = []
         
         self.route_state_subscriber = route_state_subscriber
+        self.motion_state_subscriber = motion_state_subscriber
 
         # States
         self.head_to_drop_off = False
@@ -218,14 +219,9 @@ class AVPCommandListener(Node):
         self.status_update_publisher.publish(
             String(data=f"{self.vehicle_id}:Owner has exited...")
         )
-        # time.sleep(2)
 
-        self.get_logger().info(f"[DEBUG 1] Route Status: {self.route_state_subscriber.state}")
-
-
-        rclpy.spin_once(self.route_state_subscriber, timeout_sec=1)
-
-        self.get_logger().info(f"[DEBUG 2] Route Status: {self.route_state_subscriber.state}")
+        rclpy.spin_once(self.route_state_subscriber, timeout_sec=0.1)
+        rclpy.spin_once(self.motion_state_subscriber, timeout_sec=0.1)
 
         if self.route_state_subscriber.state == 6:
             self.get_logger().info(f"[DEBUG] Reached state 6 after spin_once.")
@@ -235,7 +231,6 @@ class AVPCommandListener(Node):
             )
             return True
         
-        
         # Keep retrying until route state == 6
         while self.route_state_subscriber.state != 6:
             timeout = 5.0
@@ -243,6 +238,7 @@ class AVPCommandListener(Node):
 
             while self.route_state_subscriber.state != 6 and timeout > 0:
                 rclpy.spin_once(self.route_state_subscriber, timeout_sec=0.2)
+                rclpy.spin_once(self.motion_state_subscriber, timeout_sec=0.2)
                 timeout -= 0.2
                 # self.get_logger().info(f"[WAIT] Route State = {self.route_state_subscriber.state}")
 
@@ -252,12 +248,16 @@ class AVPCommandListener(Node):
                     String(data=f"{self.vehicle_id}:On standby...")
                 )
                 return True
+            elif self.motion_state_subscriber.state == 3:
+                self.status_publisher.publish(String(data="Moving up in queue..."))
+                self.status_update_publisher.publish(
+                    String(data=f"{self.vehicle_id}:Moving up in queue...")
+                )
             else:
                 self.status_publisher.publish(String(data="Waiting to proceed in queue..."))
                 self.status_update_publisher.publish(
                     String(data=f"{self.vehicle_id}:Waiting to proceed in queue...")
                 )
-                time.sleep(5)
             
 class ParkingSpotSubscriber(Node):
     def __init__(self, args):
@@ -322,7 +322,7 @@ def main(args=None):
     
     route_state_subscriber = RouteStateSubscriber(args)
     motion_state_subscriber = MotionStateSubscriber(args)
-    avp_command_listener = AVPCommandListener(route_state_subscriber, args)
+    avp_command_listener = AVPCommandListener(route_state_subscriber, motion_state_subscriber, args)
     parking_spot_subscriber = ParkingSpotSubscriber(args)
     reserved_spots_publisher = avp_command_listener.create_publisher(String, '/parking_spots/reserved', 10)
 
@@ -496,6 +496,12 @@ def main(args=None):
                         avp_command_listener.status_update_publisher.publish(String(
                             data=f"{avp_command_listener.vehicle_id}:Vehicle ahead preparing to leave."))
                         time.sleep(2)
+
+
+
+                        # LOGIC HERE. Goes right to letting owner exit.
+                        ## need to first let it move up in queue, then let owner exit type
+
 
                         avp_command_listener.handle_owner_exit()
                         drop_off_completed = True
