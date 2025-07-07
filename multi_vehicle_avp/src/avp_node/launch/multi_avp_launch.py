@@ -1,7 +1,7 @@
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess
-from launch.substitutions import LaunchConfiguration, PythonExpression, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch.conditions import IfCondition
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
@@ -18,44 +18,19 @@ def generate_launch_description():
     ])
 
     return LaunchDescription([
-        DeclareLaunchArgument(
-            'avp_file',
-            default_value='avp_node',
-            description='Which AVP file to run'
-        ),
-        DeclareLaunchArgument(
-            'vehicle_id',
-            default_value='1',
-            description='Vehicle ID to pass to the AVP script'
-        ),
-        DeclareLaunchArgument(
-            'enable_managers',
-            default_value='true',
-            description='Set to false to disable launching manager nodes'
-        ),
-        DeclareLaunchArgument(
-            'echo_avp',
-            default_value='auto',
-            description='Echo AVP-related topics if needed (true, false, or auto)'
-        ),
-        DeclareLaunchArgument(
-            'namespaces',
-            default_value='[main, vehicle2]',
-            description='List of namespaces to manage'
-        ),
 
-        DeclareLaunchArgument(
-            'debug',
-            default_value='false',
-            description='Set to true to use planning simulator for debugging'
-        ),
+        DeclareLaunchArgument('avp_file', default_value='main_node', description='Which AVP executable to run'),
+        DeclareLaunchArgument('vehicle_id', default_value='1', description='Vehicle ID to pass to the AVP script'),
+        DeclareLaunchArgument('enable_managers', default_value='true', description='Enable manager nodes'),
+        DeclareLaunchArgument('debug', default_value='false', description='Enable debug mode (simulator use)'),
+        DeclareLaunchArgument('namespaces', default_value='[main, vehicle2]', description='List of namespaces'),
 
         ExecuteProcess(
             cmd=['bash', script_path],
             output='screen',
         ),
 
-        # Manager Nodes
+        # Manager Nodes (conditionally launched)
         Node(
             package='avp_managers',
             executable='drop_off_zone_queue_manager',
@@ -90,7 +65,7 @@ def generate_launch_description():
             condition=IfCondition(enable_managers)
         ),
 
-        # AVP Script Node
+        # AVP Node
         Node(
             package='avp_node',
             executable=avp_file,

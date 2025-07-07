@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'avp_node'
+package_name = 'vehicle'
 
 setup(
     name=package_name,
@@ -10,21 +10,16 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/' + package_name + '/launch', ['launch/multi_avp_launch.py']),
-        ('share/' + package_name + '/scripts', ['scripts/echo_avp_topics.sh']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='ovin',
-    maintainer_email='ovin@todo.todo',
-    description='Multi-AVP Node Script',
-    license='MIT',
+    maintainer='zubair',
+    maintainer_email='zubxxr@gmail.com',
+    description='TODO: Package description',
+    license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'avp_node = avp_node.avp_node:main',
-            'main_node = avp_node.main_node:main',
         ],
     },
 )
-
