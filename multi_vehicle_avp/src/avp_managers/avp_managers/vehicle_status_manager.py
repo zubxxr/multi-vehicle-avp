@@ -51,11 +51,12 @@ class VehicleStatusManager(Node):
         # Set up topics per namespace
         for ns in self.namespaces:
             update_topic = get_topic(ns, "avp/status/update")
-            self.create_subscription(String, update_topic, self.generate_callback(ns), 10)
-            self.get_logger().info(f"Listening for status updates on: {update_topic}")
+            all_vehicle_status_topic = get_topic(ns, "avp/status/all")
 
-            status_topic = get_topic(ns, "avp/status/all")
-            self.status_publishers[ns] = self.create_publisher(String, status_topic, 10)
+            self.create_subscription(String, update_topic, self.generate_callback(ns), 10)
+            self.status_publishers[ns] = self.create_publisher(String, all_vehicle_status_topic, 10)
+
+            self.get_logger().info(f"Listening for status updates on: {update_topic}")
 
         # Broadcast full status map every second
         self.timer = self.create_timer(1.0, self.broadcast_statuses)
