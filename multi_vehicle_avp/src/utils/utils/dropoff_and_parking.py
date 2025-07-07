@@ -37,7 +37,6 @@ parking_spot_goals = {
     22: {'x': -86.37, 'y': -38.03, 'z': 0.0, 'oz': -0.6005, 'ow': 0.7996},
 }
 
-
 def generate_command(x, y, z, oz, ow):
     return f"""ros2 topic pub /planning/mission_planning/goal geometry_msgs/msg/PoseStamped '{{header: {{frame_id: "map"}}, pose: {{position: {{x: {x}, y: {y}, z: {z}}}, orientation: {{x: 0.0, y: 0.0, z: {oz}, w: {ow}}}}}}}' --once"""
 
