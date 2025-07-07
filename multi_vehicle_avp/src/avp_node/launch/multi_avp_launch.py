@@ -19,7 +19,7 @@ def generate_launch_description():
 
     return LaunchDescription([
 
-        DeclareLaunchArgument('avp_file', default_value='main_node', description='Which AVP executable to run'),
+        DeclareLaunchArgument('avp_file', default_value='avp_node', description='Which AVP executable to run'),
         DeclareLaunchArgument('vehicle_id', default_value='1', description='Vehicle ID to pass to the AVP script'),
         DeclareLaunchArgument('enable_managers', default_value='true', description='Enable manager nodes'),
         DeclareLaunchArgument('debug', default_value='false', description='Enable debug mode (simulator use)'),

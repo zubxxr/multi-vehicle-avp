@@ -15,15 +15,14 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='ovin',
-    maintainer_email='ovin@todo.todo',
-    description='Multi-AVP Node Script',
+    maintainer='Zubair Islam',
+    maintainer_email='zubxxr@gmail.com',
+    description='Top-level orchestrator node for AVP system',
     license='MIT',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
             'avp_node = avp_node.avp_node:main',
-            'main_node = avp_node.main_node:main',
         ],
     },
 )
