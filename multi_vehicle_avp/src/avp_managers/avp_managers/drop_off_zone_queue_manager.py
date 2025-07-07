@@ -13,21 +13,6 @@ import rclpy
 from rclpy.node import Node
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 from std_msgs.msg import String
-import sys
-
-if '--help' in sys.argv or '-h' in sys.argv:
-    print("""
-Drop Off Zone Queue Manager Help
-
-Listens for vehicle queue requests and broadcasts queue to all avp/queue topics.
-
-Example usage:
-    ros2 run multi_avp drop_off_zone_queue_manager --ros-args -p namespaces:='["main", "vehicle2"]'
-
-Parameters:
-    - namespaces: List of namespaces (e.g., ["main", "vehicle2"])
-    """)
-    sys.exit(0)
 
 def get_topic(namespace, base_topic):
     """Constructs full topic name based on namespace."""
