@@ -18,7 +18,7 @@ setup(
     maintainer='Zubair Islam',
     maintainer_email='zubxxr@gmail.com',
     description='Top-level orchestrator node for AVP system',
-    license='MIT',
+    license='Apache License 2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [

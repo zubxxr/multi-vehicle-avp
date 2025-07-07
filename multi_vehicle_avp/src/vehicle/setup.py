@@ -16,7 +16,7 @@ setup(
     maintainer='Zubair Islam',
     maintainer_email='zubxxr@gmail.com',
     description='Vehicle-related logic for AVP',
-    license='MIT',
+    license='Apache License 2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [

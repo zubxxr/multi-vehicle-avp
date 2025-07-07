@@ -5,7 +5,7 @@
   <version>0.0.0</version>
   <description>Manager nodes for AVP system (queue, reservation, vehicle count, etc.)</description>
   <maintainer email="zubxxr@gmail.com">Zubair Islam</maintainer>
-  <license>MIT</license>
+  <license>Apache License 2.0</license>
 
   <exec_depend>rclpy</exec_depend>
   <exec_depend>std_msgs</exec_depend>

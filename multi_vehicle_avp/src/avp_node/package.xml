@@ -5,7 +5,7 @@
   <version>0.0.0</version>
   <description>Top-level orchestrator node for AVP system</description>
   <maintainer email="zubxxr@gmail.com">Zubair Islam</maintainer>
-  <license>MIT</license>
+  <license>Apache License 2.0</license>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
