@@ -15,10 +15,10 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='ovin',
-    maintainer_email='ovin@todo.todo',
-    description='AVP Manager Nodes',
-    license='MIT',
+    maintainer='Zubair Islam',
+    maintainer_email='zubxxr@gmail.com',
+    description='Manager nodes for AVP system (queue, reservation, vehicle count, etc.)',
+    license='Apache License 2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [

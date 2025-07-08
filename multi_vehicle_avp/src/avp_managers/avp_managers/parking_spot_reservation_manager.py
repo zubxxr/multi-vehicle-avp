@@ -12,30 +12,12 @@ Topics:
 - /<namespace>/avp/reserved_parking_spots/request : Reserve a parking spot (expects String: spot_id)
 - /<namespace>/avp/reserved_parking_spots/remove  : Release a reserved spot (expects String: spot_id)
 - /<namespace>/avp/reserved_parking_spots         : Current list of all reserved spots
-
-To run manually:
-ros2 run multi_avp reservation_manager --ros-args -p namespaces:='["main", "vehicle2"]'
 """
 
 import rclpy
 from rclpy.node import Node
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 from std_msgs.msg import String
-import sys
-
-if '--help' in sys.argv or '-h' in sys.argv:
-    print("""
-Parking Spot Reservation Manager Help
-
-Listens for vehicle count requests and broadcasts count to all vehicle_count topics.
-
-Example usage:
-    ros2 run multi_avp reservation_manager --ros-args -p namespaces:='["main", "vehicle2"]'
-
-Parameters:
-    - namespaces: List of namespaces (e.g., ["main", "vehicle2"])
-    """)
-    sys.exit(0)
 
 # Helper function to format topics based on namespace
 def get_topic(namespace, topic):
@@ -74,14 +56,14 @@ class ReservationManager(Node):
         for ns in self.namespaces:
             request_topic = get_topic(ns, "avp/reserved_parking_spots/request")
             remove_topic = get_topic(ns, "avp/reserved_parking_spots/remove")
-            reserved_topic = get_topic(ns, "avp/reserved_parking_spots")
+            reserved_spots_topic = get_topic(ns, "avp/reserved_parking_spots")
 
             self.create_subscription(String, request_topic, self.generate_request_callback(ns), 10)
             self.create_subscription(String, remove_topic, self.generate_remove_callback(ns), 10)
-            self.reserved_publishers[ns] = self.create_publisher(String, reserved_topic, 10)
+            self.reserved_publishers[ns] = self.create_publisher(String, reserved_spots_topic, 10)
 
             self.get_logger().info(f"Listening on: {request_topic}, {remove_topic}")
-            self.get_logger().info(f"Publishing to: {reserved_topic}")
+            self.get_logger().info(f"Publishing to: {reserved_spots_topic}")
 
         self.initialized = True
 
@@ -95,7 +77,7 @@ class ReservationManager(Node):
                     self.get_logger().info(f"[{ns}] Reserved spot {spot}")
                     self.publish_all()
                 else:
-                    self.get_logger().info(f"[{ns}] ℹSpot {spot} already reserved")
+                    self.get_logger().info(f"[{ns}] Spot {spot} already reserved")
             except ValueError:
                 self.get_logger().warn(f"[{ns}] Invalid spot request: '{msg.data}'")
         return callback

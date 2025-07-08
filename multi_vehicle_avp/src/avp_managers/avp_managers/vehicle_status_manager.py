@@ -11,9 +11,6 @@ Responsibilities:
 Topics:
 - /<namespace>/avp/status/update : Receives status string messages from vehicles.
 - /<namespace>/avp/status/all    : Publishes all known vehicle statuses (String array or dict-style string).
-
-To run manually:
-ros2 run avp_managers vehicle_status_manager --ros-args -p namespaces:='["main", "vehicle2"]'
 """
 
 import rclpy
@@ -21,21 +18,6 @@ from rclpy.node import Node
 from std_msgs.msg import String
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 import json
-import sys
-
-if '--help' in sys.argv or '-h' in sys.argv:
-    print("""
-Vehicle Status Manager Help
-
-Tracks vehicle status updates across namespaces.
-
-Example usage:
-    ros2 run multi_avp vehicle_status_manager --ros-args -p namespaces:='["main", "vehicle2"]'
-
-Parameters:
-    - namespaces: List of namespaces (e.g., ["main", "vehicle2"])
-    """)
-    sys.exit(0)
 
 def get_topic(namespace, topic):
     """Returns topic string based on namespace."""
@@ -69,11 +51,12 @@ class VehicleStatusManager(Node):
         # Set up topics per namespace
         for ns in self.namespaces:
             update_topic = get_topic(ns, "avp/status/update")
-            self.create_subscription(String, update_topic, self.generate_callback(ns), 10)
-            self.get_logger().info(f"Listening for status updates on: {update_topic}")
+            all_vehicle_status_topic = get_topic(ns, "avp/status/all")
 
-            status_topic = get_topic(ns, "avp/status/all")
-            self.status_publishers[ns] = self.create_publisher(String, status_topic, 10)
+            self.create_subscription(String, update_topic, self.generate_callback(ns), 10)
+            self.status_publishers[ns] = self.create_publisher(String, all_vehicle_status_topic, 10)
+
+            self.get_logger().info(f"Listening for status updates on: {update_topic}")
 
         # Broadcast full status map every second
         self.timer = self.create_timer(1.0, self.broadcast_statuses)

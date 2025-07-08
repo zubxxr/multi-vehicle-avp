@@ -13,21 +13,6 @@ import rclpy
 from rclpy.node import Node
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 from std_msgs.msg import String
-import sys
-
-if '--help' in sys.argv or '-h' in sys.argv:
-    print("""
-Drop Off Zone Queue Manager Help
-
-Listens for vehicle queue requests and broadcasts queue to all avp/queue topics.
-
-Example usage:
-    ros2 run multi_avp drop_off_zone_queue_manager --ros-args -p namespaces:='["main", "vehicle2"]'
-
-Parameters:
-    - namespaces: List of namespaces (e.g., ["main", "vehicle2"])
-    """)
-    sys.exit(0)
 
 def get_topic(namespace, base_topic):
     """Constructs full topic name based on namespace."""
@@ -60,16 +45,16 @@ class QueueManager(Node):
 
         # Set up subscribers and publishers per namespace
         for ns in self.namespaces:
-            req_topic = get_topic(ns, "avp/queue/request")
-            rem_topic = get_topic(ns, "avp/queue/remove")
-            pub_topic = get_topic(ns, "avp/queue")
+            request_topic = get_topic(ns, "avp/queue/request")
+            remove_topic = get_topic(ns, "avp/queue/remove")
+            queued_vehicles_topic = get_topic(ns, "avp/queue")
 
-            self.create_subscription(String, req_topic, self.queue_request_callback, 10)
-            self.create_subscription(String, rem_topic, self.queue_remove_callback, 10)
-            self.queue_publishers[ns] = self.create_publisher(String, pub_topic, 10)
+            self.create_subscription(String, request_topic, self.queue_request_callback, 10)
+            self.create_subscription(String, remove_topic, self.queue_remove_callback, 10)
+            self.queue_publishers[ns] = self.create_publisher(String, queued_vehicles_topic, 10)
 
-            self.get_logger().info(f"Subscribed to: {req_topic}, {rem_topic}")
-            self.get_logger().info(f"Will publish to: {pub_topic}")
+            self.get_logger().info(f"Subscribed to: {request_topic}, {remove_topic}")
+            self.get_logger().info(f"Will publish to: {queued_vehicles_topic}")
 
         # Timer to publish the current queue state periodically
         self.timer = self.create_timer(1.0, self.publish_queues)
