@@ -1,44 +1,26 @@
-"""
-Autonomous Valet Parking (AVP) Node
-
-This is the core controller node that manages the behavior of a single AVP vehicle 
-during a simulated autonomous valet parking flow. It handles commands from the user interface, 
-monitors vehicle states, and publishes appropriate status updates and commands.
-
-Responsibilities:
-- Listens to AVP panel commands (e.g., head to drop-off, start AVP, retrieve).
-- Checks if vehicle has entered the drop-off zone and manages queue requests.
-- Waits for an available parking spot and navigates the vehicle to it.
-- Coordinates reservation and release of parking spots across all vehicles.
-- Publishes live status updates via /avp/status for user feedback.
-
-Topics Used:
-- /avp/command: String commands from the AVP panel.
-- /localization/kinematic_state: Ego vehicle odometry.
-- /parking_spots/empty: List of unoccupied spots, as a Stringified array.
-- /avp/queue/request, /avp/queue/remove: Manage queue positions.
-- /avp/vehicle_count/request: Notify the system about the presence of a new vehicle.
-- /avp/reserved_parking_spots/request, /remove: Reserve or release a parking spot.
-- /parking_spots/reserved: Broadcast currently reserved spots.
-- /planning/mission_planning/goal: Topic to send goal poses to Autoware.
-- /api/motion/state: Check if vehicle is stopped or moving.
-- /planning/mission_planning/route_selector/main/state: Check if vehicle reached goal.
-- /autoware/engage: Engages Autoware to start motion.
-
-Usage (ROS 2 Launch File):
-This script is designed to be launched from a ROS 2 launch file with arguments:
---vehicle_id <ID> 
---debug true|false
-"""
-
 import rclpy
 from std_msgs.msg import String
 import argparse
+from enum import Enum, auto
 import time
+
 from vehicle.state_subscribers import RouteStateSubscriber, MotionStateSubscriber, ParkingSpotSubscriber
 from vehicle.command_listener import AVPCommandListener
-from utils.ros_helpers import run_ros2_command, build_ros2_pub
+from utils.ros_helpers import run_ros2_command, build_ros2_pub, wait_until_route_complete
 from utils.dropoff_and_parking import parking_spot_locations, is_in_drop_off_zone
+
+class AVPState(Enum):
+    INIT = auto()                     
+    WAIT_FOR_DROP_OFF = auto()      
+    HANDLE_DROP_OFF = auto()        
+    START_AVP = auto()              
+    PARK_VEHICLE = auto()           
+    RESERVE_SPOT = auto()           
+    CLEAR_RESERVATION = auto()      
+    RETRIEVE = auto()               
+    FINALIZE_RETRIEVAL = auto()     
+    COMPLETE = auto()               
+
 
 def main(args=None):
     parser = argparse.ArgumentParser(description="Run AVP with a specific vehicle ID.")
@@ -48,12 +30,12 @@ def main(args=None):
     args.debug = args.debug.lower() == 'true'
 
     rclpy.init(args=None)
-    
+
     route_state_subscriber = RouteStateSubscriber(args)
     motion_state_subscriber = MotionStateSubscriber(args)
     avp_command_listener = AVPCommandListener(route_state_subscriber, motion_state_subscriber, args)
     parking_spot_subscriber = ParkingSpotSubscriber(args)
-    
+
     initial_pose_payload = (
         "{header: {frame_id: 'map'}, "
         "pose: {pose: {position: {x: -111.28318786621094, y: -80.02529907226562, z: 0.0}, "
@@ -89,237 +71,187 @@ def main(args=None):
     leave_area_goal_pose = build_ros2_pub("/planning/mission_planning/goal", "geometry_msgs/msg/PoseStamped", leave_area_payload)
 
     engage_autonomous_mode = build_ros2_pub("/autoware/engage", "autoware_vehicle_msgs/msg/Engage", "{engage: True}")
+    disengage_autonomous_mode = build_ros2_pub("/autoware/engage", "autoware_vehicle_msgs/msg/Engage", "{engage: False}")
 
-    # Timeout is needed to wait for the vehicle count request subscriber sent from the central manager node
-    # This is due to high traffic in Zenoh and subscribers/publishers coming in at random
     timeout = 15
     if args.debug: # if debug is true, that means planning simulator is used, meaning less traffic, so 5 is sufficient
         timeout = 5
     else: 
-        timeout = 15
+        timeout = 15 # if using e2e simulator, there is more traffic, so timeout of 15 is needed.
     
     while avp_command_listener.vehicle_count_request_pub.get_subscription_count() == 0 and timeout > 0:
-        avp_command_listener.get_logger().info("Waiting for /avp/vehicle_count/request subscriber...")
+        avp_command_listener.get_logger().info("[INFO] Waiting for /avp/vehicle_count/request subscriber...")
         time.sleep(1)
         timeout -= 1
 
-    # Send vehicle ID
     avp_command_listener.vehicle_id_pub.publish(String(data=str(avp_command_listener.vehicle_id)))
-
-    # Send request to add vehicle and increment count
     avp_command_listener.vehicle_count_request_pub.publish(String(data="add_me"))
-    avp_command_listener.get_logger().info("[REQUEST] Sent vehicle_count_request to manager")
 
-    # if debug is True, then planning simulator is being used, so it will not receive initial pose from AWSIM
-    if args.debug:
-        run_ros2_command(set_initial_pose)
+    current_state = AVPState.INIT
+    chosen_parking_spot = None
+    front_car_moved = False
 
     counter = 0
-    chosen_parking_spot = None
+    waiting_for_queue = True
 
-    drop_off_triggered = False
-    drop_off_completed = False
-    parking_complete = False
-    retrieve_vehicle_complete = False
-    reserved_spot_cleared = False
-    leave_for_new_destination = False
-
+    if args.debug:
+        run_ros2_command(set_initial_pose)
+    
     while rclpy.ok():
-        if not avp_command_listener.status_initialized:
+        rclpy.spin_once(avp_command_listener, timeout_sec=0.5)
+        rclpy.spin_once(route_state_subscriber, timeout_sec=0.5)
+        rclpy.spin_once(motion_state_subscriber, timeout_sec=0.5)
+
+        if current_state == AVPState.INIT:
             avp_command_listener.publish_vehicle_status("Arrived at location.")
-            avp_command_listener.status_initialized = True
+            current_state = AVPState.WAIT_FOR_DROP_OFF
 
-        # If "Head to drop off" is clicked
-        if not drop_off_triggered and avp_command_listener.head_to_drop_off:
-            run_ros2_command(head_to_drop_off)
-            run_ros2_command(engage_autonomous_mode)
-            drop_off_triggered = True
+        elif current_state == AVPState.WAIT_FOR_DROP_OFF:
+            if avp_command_listener.head_to_drop_off:
+                run_ros2_command(head_to_drop_off)
+                run_ros2_command(engage_autonomous_mode)
+                current_state = AVPState.HANDLE_DROP_OFF
 
-        if (    
-            not avp_command_listener.initiate_parking and
-            not drop_off_completed and
-            avp_command_listener.ego_x is not None and
-            is_in_drop_off_zone(avp_command_listener.ego_x, avp_command_listener.ego_y)
-        ):
-            avp_command_listener.publish_vehicle_status("Arrived at drop-off area.")
+        elif current_state == AVPState.HANDLE_DROP_OFF:
+            if avp_command_listener.ego_x and is_in_drop_off_zone(avp_command_listener.ego_x, avp_command_listener.ego_y):
+                avp_command_listener.publish_vehicle_status("Arrived at drop-off area.")
 
-        if  (
-            motion_state_subscriber.state == 1 and 
-            not drop_off_completed and
-            avp_command_listener.ego_x is not None and
-            is_in_drop_off_zone(avp_command_listener.ego_x, avp_command_listener.ego_y)
-        ):  
-            
-            if avp_command_listener.current_queue:
-                if str(avp_command_listener.current_queue[0]) != str(avp_command_listener.vehicle_id):
-
-                    avp_command_listener.get_logger().info(f"[DEBUG] Vehicle is NOT first in queue — waiting for vehicle ahead.")
-                    avp_command_listener.publish_vehicle_status("Waiting 10 seconds for vehicle ahead...")
-
-                    first_in_line = avp_command_listener.current_queue[0]
-                    first_status_of_first_in_line = avp_command_listener.all_vehicle_status.get(str(first_in_line), "")
-
-                    waited = 0
-                    front_car_moved = False
-
-                    while waited < 10:
-                        loop_start = time.time()
-
-                        rclpy.spin_once(avp_command_listener, timeout_sec=0.1)
-                        time.sleep(0.05)
-
-                        next_status_of_first_in_line = avp_command_listener.all_vehicle_status.get(str(first_in_line), "")
-
-                        avp_command_listener.get_logger().info(f"Vehicle {first_in_line}'s status after {waited+1} sec: {next_status_of_first_in_line}")
-
-                        if next_status_of_first_in_line != first_status_of_first_in_line:
-                            avp_command_listener.get_logger().info(f"Status changed! {first_status_of_first_in_line} → {next_status_of_first_in_line}")
-                            if ("Autonomous valet parking started" in next_status_of_first_in_line or "Waiting for an available parking spot..." in next_status_of_first_in_line):
-                                front_car_moved = True
-                                break
-                                
-                        first_status_of_first_in_line = next_status_of_first_in_line
-                        waited += 1
-
-                        time_to_wait = 1.0 - (time.time() - loop_start)
-                        if time_to_wait > 0:
-                            time.sleep(time_to_wait)
-
-                    # Final spin to catch any last-millisecond updates
-                    rclpy.spin_once(avp_command_listener, timeout_sec=0.2)
-                    final_status_of_first_in_line = avp_command_listener.all_vehicle_status.get(str(first_in_line), "")
-
-                    if final_status_of_first_in_line != first_status_of_first_in_line:
-                        avp_command_listener.get_logger().info(f"[FINAL CHECK] Status changed! {first_status_of_first_in_line} → {final_status_of_first_in_line}")
-                        
-                        if ("On standby..." not in final_status_of_first_in_line):
-                            front_car_moved = True
-
-                    if front_car_moved:
-                        avp_command_listener.publish_vehicle_status("Vehicle ahead is preparing to leave.")
-                        time.sleep(2)
-
-                        avp_command_listener.publish_vehicle_status("Moving up in queue...")
-                        
-                        # Wait until car has fully arrived at start of drop off zone
-                        while route_state_subscriber.state != 6:
-                            rclpy.spin_once(route_state_subscriber, timeout_sec=0.2)
-                        
+                if avp_command_listener.current_queue:
+                    if str(avp_command_listener.current_queue[0]) == str(avp_command_listener.vehicle_id):
+                        wait_until_route_complete(route_state_subscriber)
                         avp_command_listener.handle_owner_exit()
-                        drop_off_completed = True
+                        current_state = AVPState.START_AVP
 
                     else:
-                        avp_command_listener.publish_vehicle_status("Vehicle(s) ahead are still stationary. Proceeding with drop-off.")
-                        time.sleep(2)
-                        avp_command_listener.handle_owner_exit()
-                        drop_off_completed = True
+                        while motion_state_subscriber.state != 1:
+                            rclpy.spin_once(motion_state_subscriber, timeout_sec=0.2)
 
+                        avp_command_listener.get_logger().info(f"[DEBUG] Vehicle is NOT first in queue — waiting for vehicle ahead.")
+                        avp_command_listener.publish_vehicle_status("Waiting 10 seconds for vehicle ahead...")
+
+                        first_in_line = avp_command_listener.current_queue[0]
+                        
+                        start_time = time.time()
+
+                        while True:
+                            rclpy.spin_once(avp_command_listener, timeout_sec=0.2)
+                            status = avp_command_listener.all_vehicle_status.get(str(first_in_line), "")
+
+                            if status and "On standby..." not in status:
+                                front_car_moved = True
+                                break
+                            elif time.time() - start_time > 10:
+                                avp_command_listener.publish_vehicle_status(f"Waiting... {start_time} sec")   
+                                break
+
+                        if front_car_moved:
+                            avp_command_listener.publish_vehicle_status("Vehicle ahead is preparing to leave.")
+                            time.sleep(2)
+
+                            avp_command_listener.publish_vehicle_status("Moving up in queue...")
+                            
+                            # Wait until car has fully arrived at start of drop off zone
+                            wait_until_route_complete(route_state_subscriber)
+                            
+                            avp_command_listener.handle_owner_exit()
+                            current_state = AVPState.START_AVP
+
+                        else:
+                            avp_command_listener.publish_vehicle_status("Vehicle(s) ahead are still stationary. Proceeding with drop-off.")
+                            time.sleep(2)
+                            run_ros2_command(disengage_autonomous_mode)
+                            avp_command_listener.handle_owner_exit(waiting_for_queue)
+                            run_ros2_command(engage_autonomous_mode)
+                            avp_command_listener.publish_vehicle_status("Waiting to proceed in queue...")
+                            current_state = AVPState.START_AVP
                 else:
-                    avp_command_listener.get_logger().info(f"[DEBUG] Vehicle IS first in queue — proceeding with drop-off.")
-                    
-                    avp_command_listener.handle_owner_exit()
-                    drop_off_completed = True
+                    avp_command_listener.get_logger().warn(f"[WARN] Queue is empty!")
+                    wait_until_route_complete(route_state_subscriber)
+                    if args.debug:
+                        avp_command_listener.handle_owner_exit()
+                        current_state = AVPState.START_AVP
 
-            else:
-                avp_command_listener.get_logger().warn(f"[WARN] Queue is empty!")
+        elif current_state == AVPState.START_AVP:
+            wait_until_route_complete(route_state_subscriber)
+            avp_command_listener.publish_vehicle_status("On standby...")
+            if avp_command_listener.start_avp:
+                avp_command_listener.publish_vehicle_status("Autonomous valet parking started...")
+                avp_command_listener.initiate_parking = True
+                current_state = AVPState.PARK_VEHICLE
 
-                if args.debug:
-                    avp_command_listener.handle_owner_exit()
-                    drop_off_completed = True
-
-        if avp_command_listener.start_avp and not avp_command_listener.initiate_parking: 
-            avp_command_listener.publish_vehicle_status("Autonomous valet parking started...")
-            time.sleep(2)
-
-            avp_command_listener.initiate_parking = True
-
-        if avp_command_listener.initiate_parking and not parking_complete:
-
-            rclpy.spin_once(parking_spot_subscriber, timeout_sec=0.1)  
+        elif current_state == AVPState.PARK_VEHICLE:
+            rclpy.spin_once(parking_spot_subscriber, timeout_sec=0.5)
             parking_spots = parking_spot_subscriber.available_parking_spots
-
-            if parking_spots is None:
-                avp_command_listener.publish_vehicle_status("Waiting for an available parking spot...")
-                time.sleep(2)
-
-            if parking_spots is not None:
-                first_spot_in_queue = int(parking_spots.strip().strip('[]').split(',')[0].strip())
-
+            if parking_spots:
+                first_spot_in_queue = int(parking_spots.strip('[]').split(',')[0])
                 if first_spot_in_queue != chosen_parking_spot:
-                    if counter == 1:
-                        avp_command_listener.get_logger().info('\nParking spot #%s was taken.' % chosen_parking_spot)
-                        counter = 0
+                    chosen_parking_spot = first_spot_in_queue
 
-                    # Printing the first value
                     avp_command_listener.get_logger().info('\nAvailable parking spot found: %s' % first_spot_in_queue)
-
                     avp_command_listener.publish_vehicle_status("Available parking spot found.")
                     time.sleep(2)
-                    avp_command_listener.publish_vehicle_status(f"Parking in Spot {first_spot_in_queue}.")
 
-                    parking_spot_goal_pose_command = parking_spot_locations[first_spot_in_queue]
-                    run_ros2_command(parking_spot_goal_pose_command)
+                    avp_command_listener.publish_vehicle_status(f"Parking in Spot {first_spot_in_queue}.")
+                    run_ros2_command(parking_spot_locations[first_spot_in_queue])
                     run_ros2_command(engage_autonomous_mode)
 
                     avp_command_listener.queue_remove_pub.publish(String(data=avp_command_listener.vehicle_id))
-                    avp_command_listener.get_logger().info(f"[QUEUE] Sent queue removal request for {avp_command_listener.vehicle_id}")
 
-                    if first_spot_in_queue not in avp_command_listener.reserved_spots_list:
+                    current_state = AVPState.RESERVE_SPOT
 
-                        avp_command_listener.reserved_spot_request_pub.publish(String(data=str(first_spot_in_queue)))
-                        avp_command_listener.reserved_spots_list.append(first_spot_in_queue)
-                        avp_command_listener.get_logger().info(f"[AVP] Sent reservation request: {str(first_spot_in_queue)}")
-                    else:
-                        avp_command_listener.get_logger().info(f"[AVP] Spot {str(first_spot_in_queue)} already requested.")
+        elif current_state == AVPState.RESERVE_SPOT:
+            if first_spot_in_queue not in avp_command_listener.reserved_spots_list:
+                avp_command_listener.reserved_spot_request_pub.publish(String(data=str(first_spot_in_queue)))
+                avp_command_listener.reserved_spots_list.append(first_spot_in_queue)
+                avp_command_listener.get_logger().info(f"[AVP] Sent reservation request: {str(first_spot_in_queue)}")
+            else:
+                avp_command_listener.get_logger().warn(f"[AVP] Spot {str(first_spot_in_queue)} already requested.")
 
-                    route_state_subscriber.state = -1
-
-                    avp_command_listener.get_logger().info(f"[AVP] Setting goal pose to parking spot: {str(first_spot_in_queue)})")
-
-                    counter += 1
-                    chosen_parking_spot = first_spot_in_queue
-                    parking_complete = True
-                
-            time.sleep(1)
-
-        if route_state_subscriber.state == 6 and parking_complete and not reserved_spot_cleared:
-            avp_command_listener.publish_vehicle_status("Car has been parked.")
-
-            avp_command_listener.reserved_spot_remove_pub.publish(String(data=str(chosen_parking_spot)))
-            avp_command_listener.get_logger().info(f"[AVP] Sent removal request: {str(chosen_parking_spot)}")
-
-            reserved_spot_cleared = True
+            chosen_parking_spot = first_spot_in_queue
+            current_state = AVPState.CLEAR_RESERVATION
             route_state_subscriber.state = -1
 
-        if avp_command_listener.retrieve_vehicle and not retrieve_vehicle_complete:
-            avp_command_listener.get_logger().info("Going to Drop Off Zone.")
-            avp_command_listener.publish_vehicle_status("Car is called for retrieval.")
-            
-            run_ros2_command(retrieve_vehicle_goal_pose)
-            run_ros2_command(engage_autonomous_mode)
-            retrieve_vehicle_complete = True
-        
-        if route_state_subscriber.state == 6 and retrieve_vehicle_complete and not leave_for_new_destination:
-                avp_command_listener.publish_vehicle_status("Car has been retrieved.")
-                time.sleep(2)
-                avp_command_listener.publish_vehicle_status("Owner is getting in...")
-                time.sleep(2)
-                avp_command_listener.publish_vehicle_status("Owner is inside.")
-                time.sleep(2)
-                avp_command_listener.publish_vehicle_status("Leaving to new destination.")
+        elif current_state == AVPState.CLEAR_RESERVATION:
+            wait_until_route_complete(route_state_subscriber)
 
-                run_ros2_command(leave_area_goal_pose)
+            avp_command_listener.publish_vehicle_status("Car has been parked.")
+            avp_command_listener.reserved_spot_remove_pub.publish(String(data=str(chosen_parking_spot)))
+            current_state = AVPState.RETRIEVE
+
+        elif current_state == AVPState.RETRIEVE:
+            if avp_command_listener.retrieve_vehicle:
+                avp_command_listener.publish_vehicle_status("Car is called for retrieval.")
+                run_ros2_command(retrieve_vehicle_goal_pose)
                 run_ros2_command(engage_autonomous_mode)
-                leave_for_new_destination = True
+                current_state = AVPState.FINALIZE_RETRIEVAL
+                route_state_subscriber.state = -1
 
-        rclpy.spin_once(route_state_subscriber, timeout_sec=1)
-        rclpy.spin_once(motion_state_subscriber, timeout_sec=1)
-        rclpy.spin_once(avp_command_listener, timeout_sec=1)
+        elif current_state == AVPState.FINALIZE_RETRIEVAL:
+            wait_until_route_complete(route_state_subscriber)
 
+            avp_command_listener.publish_vehicle_status("Car has been retrieved.")
+            time.sleep(2)
+            avp_command_listener.publish_vehicle_status("Owner is getting in...")
+            time.sleep(5)
+            avp_command_listener.publish_vehicle_status("Owner is inside.")
+            time.sleep(2)
+            avp_command_listener.publish_vehicle_status("Leaving for new destination.")
+            run_ros2_command(leave_area_goal_pose)
+            run_ros2_command(engage_autonomous_mode)
+            current_state = AVPState.COMPLETE
+            route_state_subscriber.state = -1
+
+        elif current_state == AVPState.COMPLETE:
+            time.sleep(3)
+            wait_until_route_complete(route_state_subscriber)
+            
+            avp_command_listener.publish_vehicle_status("AVP process complete.")
+            break
+
+    avp_command_listener.destroy_node()
     route_state_subscriber.destroy_node()
     motion_state_subscriber.destroy_node()
     parking_spot_subscriber.destroy_node()
-    avp_command_listener.destroy_node()
     rclpy.shutdown()
 
 if __name__ == '__main__':
