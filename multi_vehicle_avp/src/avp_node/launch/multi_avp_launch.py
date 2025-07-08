@@ -19,7 +19,7 @@ def generate_launch_description():
 
     return LaunchDescription([
 
-        DeclareLaunchArgument('avp_file', default_value='avp_state_machine_node', description='Which AVP executable to run'),
+        DeclareLaunchArgument('avp_file', default_value='avp_node', description='Which AVP executable to run'),
         # DeclareLaunchArgument('avp_file', default_value='avp_node', description='Which AVP executable to run'),
         DeclareLaunchArgument('vehicle_id', default_value='1', description='Vehicle ID to pass to the AVP script'),
         DeclareLaunchArgument('enable_managers', default_value='true', description='Enable manager nodes'),
@@ -63,7 +63,7 @@ def generate_launch_description():
             ]
         ),
         TimerAction(
-            period=4.0,
+            period=5.0,
             actions=[
                 Node(
                     package='avp_managers',
@@ -76,7 +76,7 @@ def generate_launch_description():
             ]
         ),
         TimerAction(
-            period=5.0,
+            period=6.0,
             actions=[
                 Node(
                     package='avp_managers',
@@ -91,7 +91,7 @@ def generate_launch_description():
 
         # AVP Node
         TimerAction(
-            period=5.5,
+            period=8.0,
             actions=[
                 Node(
                     package='avp_node',
