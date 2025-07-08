@@ -13,9 +13,9 @@ TOPICS=(
 # Loop through each topic and echo it silently
 for topic in "${TOPICS[@]}"
 do
-    echo "🔄 Echoing: $topic"
+    echo "Echoing: $topic"
     ros2 topic echo "$topic" > /dev/null &
 done
 
-echo "✅ All essential localization topics are being echoed in the background."
+echo "All essential localization topics are being echoed in the background."
 
