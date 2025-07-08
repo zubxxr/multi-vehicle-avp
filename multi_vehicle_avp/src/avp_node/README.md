@@ -82,8 +82,7 @@ ros2 launch avp_node multi_avp_launch.py \
 ```
 avp_node/
 ├── avp_node/
-│   ├── avp_node.py                  # Legacy version (non-state machine)
-│   ├── avp_state_machine_node.py     # Active state machine version
+│   ├── avp_node.py                  # AVP Node
 │   └── __init__.py
 ├── launch/
 │   └── multi_avp_launch.py            # Launch file for full simulation
