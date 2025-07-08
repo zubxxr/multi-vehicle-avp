@@ -1,4 +1,4 @@
-# Autonomous Valet Parking (AVP) Node - State Machine Version
+# Autonomous Valet Parking (AVP) Node
 
 This is the core controller node for a single autonomous valet parking (AVP) vehicle. It operates using a state machine architecture to coordinate each phase of the parking flow — from drop-off to parking to retrieval.
 
