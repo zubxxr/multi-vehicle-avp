@@ -1,3 +1,4 @@
+import rclpy
 from unique_identifier_msgs.msg import UUID
 import uuid
 import subprocess
@@ -13,3 +14,7 @@ def run_ros2_command(command):
         subprocess.run(command, shell=True, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except subprocess.CalledProcessError as e:
         print(f"Error executing command: {e}")
+
+def wait_until_route_complete(route_state_subscriber, timeout_sec=0.2):
+    while route_state_subscriber.state != 6:
+        rclpy.spin_once(route_state_subscriber, timeout_sec=timeout_sec)

@@ -62,7 +62,7 @@ class AVPCommandListener(Node):
         self.ego_x = msg.pose.pose.position.x
         self.ego_y = msg.pose.pose.position.y
 
-        if is_in_drop_off_zone(self.ego_x, self.ego_y): 
+        if not self.retrieve_vehicle and is_in_drop_off_zone(self.ego_x, self.ego_y): 
             if self.vehicle_id not in self.cars_in_zone:
                 self.cars_in_zone.add(self.vehicle_id)
                 msg = String()
@@ -71,7 +71,7 @@ class AVPCommandListener(Node):
                 print(f"[QUEUE REQUEST] Sent drop-off request for {self.vehicle_id}")
         else:
             if self.vehicle_id in self.cars_in_zone:
-                self.cars_in_zone.remove(self.vehicle_id)
+                self.cars_in_zone.remove(self.vehicle_id)                
 
     ## When a button in the AVPPanel is clicked, it sends different messages
     def command_callback(self, msg):
@@ -90,7 +90,7 @@ class AVPCommandListener(Node):
             self.get_logger().warn(f"Failed to parse /avp/queue: {e}")
             self.current_queue = []
 
-    def handle_owner_exit(self):
+    def handle_owner_exit(self, waiting_for_queue=False):
         self.publish_vehicle_status("Owner is exiting...")
         time.sleep(5)
         self.publish_vehicle_status("Owner has exited.")
@@ -105,19 +105,11 @@ class AVPCommandListener(Node):
         
         # Keep retrying until route state == 6
         while self.route_state_subscriber.state != 6:
-            timeout = 5.0
-            self.get_logger().info(f"[WAITING] Trying to confirm state = 6...")
+            rclpy.spin_once(self.route_state_subscriber, timeout_sec=0.2)
 
-            while self.route_state_subscriber.state != 6 and timeout > 0:
-                rclpy.spin_once(self.route_state_subscriber, timeout_sec=0.2)
-                rclpy.spin_once(self.motion_state_subscriber, timeout_sec=0.2)
-                timeout -= 0.2
-
-            if self.route_state_subscriber.state == 6:
-                self.publish_vehicle_status("On standby...")
+            if waiting_for_queue:
                 return True
-            elif self.motion_state_subscriber.state == 3:
-                self.publish_vehicle_status("Moving up in queue...")
             else:
-                self.publish_vehicle_status("Waiting to proceed in queue...")
-            
+                if self.route_state_subscriber.state == 6:
+                    self.publish_vehicle_status("On standby...")
+                    return True
