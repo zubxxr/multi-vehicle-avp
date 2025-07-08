@@ -91,7 +91,6 @@ def main(args=None):
     chosen_parking_spot = None
     front_car_moved = False
 
-    counter = 0
     waiting_for_queue = True
 
     if args.debug:
@@ -128,6 +127,7 @@ def main(args=None):
 
                         avp_command_listener.get_logger().info(f"[DEBUG] Vehicle is NOT first in queue — waiting for vehicle ahead.")
                         avp_command_listener.publish_vehicle_status("Waiting 10 seconds for vehicle ahead...")
+                        time.sleep(2)
 
                         first_in_line = avp_command_listener.current_queue[0]
                         
@@ -135,13 +135,18 @@ def main(args=None):
 
                         while True:
                             rclpy.spin_once(avp_command_listener, timeout_sec=0.2)
+
+                            waited_time = int(time.time() - start_time) 
+                            avp_command_listener.publish_vehicle_status(f"Waiting... {waited_time} sec")
+
                             status = avp_command_listener.all_vehicle_status.get(str(first_in_line), "")
 
                             if status and "On standby..." not in status:
                                 front_car_moved = True
                                 break
-                            elif time.time() - start_time > 10:
-                                avp_command_listener.publish_vehicle_status(f"Waiting... {start_time} sec")   
+                            elif waited_time >= 10:
+                                avp_command_listener.publish_vehicle_status(f"Waited 10 seconds. Proceeding with drop-off.")
+                                time.sleep(2)
                                 break
 
                         if front_car_moved:
