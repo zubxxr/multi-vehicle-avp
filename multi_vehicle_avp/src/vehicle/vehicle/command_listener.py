@@ -94,7 +94,8 @@ class AVPCommandListener(Node):
         self.publish_vehicle_status("Owner is exiting...")
         time.sleep(5)
         self.publish_vehicle_status("Owner has exited.")
-
+        time.sleep(2)
+        
         rclpy.spin_once(self.route_state_subscriber, timeout_sec=0.1)
         rclpy.spin_once(self.motion_state_subscriber, timeout_sec=0.1)
 
