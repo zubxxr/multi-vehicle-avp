@@ -175,7 +175,7 @@ def main(args=None):
 
                     status = avp_command_listener.all_vehicle_status.get(str(first_in_line), "")
 
-                    if status and "On standby..." not in status:
+                    if status and "Autonomous valet parking started..." in status:
                         front_car_moved = True
                         break
                     elif waited_time >= 10:
@@ -222,6 +222,7 @@ def main(args=None):
 
             elif current_state == VehicleState.AVP_STARTED:
                 avp_command_listener.publish_vehicle_status("Autonomous valet parking started...")
+                time.sleep(2)
                 current_state = VehicleState.FINDING_PARKING_SPOT
 
             elif current_state == VehicleState.FINDING_PARKING_SPOT:
@@ -313,7 +314,8 @@ def main(args=None):
         route_state_subscriber.destroy_node()
         motion_state_subscriber.destroy_node()
         parking_spot_subscriber.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
