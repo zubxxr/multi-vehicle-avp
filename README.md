@@ -5,7 +5,7 @@
 ~/Unity/UnityHub.AppImage
 ```
 ```bash
-source ~/Multi-AVP/env/bin/activate
+source ~/Multi-Vehicle-Autonomous-Valet-Parking/yolo_detection_server/venv/bin/activate
 python3 yolo_server.py
 ```
 ```bash
@@ -14,9 +14,8 @@ source ~/autoware/install/setup.bash
 ros2 launch autoware_launch e2e_simulator.launch.xml vehicle_model:=awsim_labs_vehicle sensor_model:=awsim_labs_sensor_kit map_path:=$HOME/autoware_map/sirc/ launch_vehicle_interface:=true
 ```
 ``` bash
-cd ~/zenoh-plugin-ros2dds
 source ~/zenoh-plugin-ros2dds/install/setup.bash
-zenoh_bridge_ros2dds -c zenoh-bridge-awsim.json5
+zenoh_bridge_ros2dds -c ~/Multi-Vehicle-Autonomous-Valet-Parking/zenoh_configs/zenoh-bridge-awsim.json5
 ```
 ```bash
 source /opt/ros/humble/setup.bash
@@ -32,9 +31,8 @@ source ~/autoware/install/setup.bash
 ros2 launch autoware_launch e2e_simulator.launch.xml vehicle_model:=awsim_labs_vehicle sensor_model:=awsim_labs_sensor_kit map_path:=$HOME/autoware_map/sirc/ launch_vehicle_interface:=true
 ```
 ``` bash
-cd ~/zenoh-plugin-ros2dds
 source ~/zenoh-plugin-ros2dds/install/setup.bash
-zenoh_bridge_ros2dds -c zenoh-bridge-vehicle2.json5 -e tcp/10.0.0.172:7447
+zenoh_bridge_ros2dds -c ~/Multi-Vehicle-Autonomous-Valet-Parking/zenoh_configs/zenoh-bridge-vehicle2.json5 -e tcp/10.0.0.172:7447
 ```
 ```bash
 source /opt/ros/humble/setup.bash
