@@ -26,10 +26,8 @@ cd $HOME/Multi-AVP/multi_vehicle_avp/
 source $HOME/autoware/install/setup.bash
 source /opt/ros/humble/setup.bash
 source install/setup.bash
-ros2 launch avp_node multi_avp_launch.py vehicle_id:=1 enable_managers:=true namespaces:='[main, vehicle2]' debug:=true
+ros2 launch avp_node multi_avp_launch.py vehicle_id:=1 enable_managers:=true namespaces:="['vehicle2']"
 ```
-> Check Debug Flag
-
 
 ## Host 2 (ROG Laptop)
 ```bash
@@ -48,7 +46,7 @@ cd $HOME/Multi-AVP/multi_vehicle_avp/
 source $HOME/autoware/install/setup.bash
 source /opt/ros/humble/setup.bash
 source install/setup.bash
-ros2 launch avp_node multi_avp_launch.py vehicle_id:=2 enable_managers:=false namespaces:='[main, vehicle2]' debug:=false
+ros2 launch avp_node multi_avp_launch.py vehicle_id:=2
 ```
 > NOT SURE IF I NEED THE NAMESPACES OR NOT
 > Check Debug Flag
