@@ -27,9 +27,8 @@ ros2 launch avp_node multi_avp_launch.py vehicle_id:=1 enable_managers:=true nam
 
 ## Host 2 (ROG Laptop)
 ```bash
-cd ~/autoware
 source /opt/ros/humble/setup.bash
-source install/setup.bash
+source ~/autoware/install/setup.bash
 ros2 launch autoware_launch e2e_simulator.launch.xml vehicle_model:=awsim_labs_vehicle sensor_model:=awsim_labs_sensor_kit map_path:=$HOME/autoware_map/sirc/ launch_vehicle_interface:=true
 ```
 ``` bash
