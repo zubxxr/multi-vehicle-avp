@@ -5,7 +5,7 @@ from PIL import Image
 
 app = Flask(__name__)
 
-model_path = 'best.pt'
+model_path = 'weight.pt'
 
 # Load YOLO model
 model = torch.hub.load('ultralytics/yolov5', 'custom', path=model_path, force_reload=True)
