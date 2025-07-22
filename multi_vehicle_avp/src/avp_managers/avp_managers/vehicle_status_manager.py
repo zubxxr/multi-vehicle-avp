@@ -11,6 +11,7 @@ Responsibilities:
 Topics:
 - /<namespace>/avp/status/update : Receives status string messages from vehicles.
 - /<namespace>/avp/status/all    : Publishes all known vehicle statuses (String array or dict-style string).
+- /avp/status/update and /avp/status/all are used for the default (global) channel.
 """
 
 import rclpy
@@ -18,10 +19,11 @@ from rclpy.node import Node
 from std_msgs.msg import String
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 import json
+import ast
 
 def get_topic(namespace, topic):
     """Returns topic string based on namespace."""
-    return f"/{topic}" if namespace == "main" else f"/{namespace}/{topic}"
+    return f"/{topic}" if namespace == "default" else f"/{namespace}/{topic}"
 
 class VehicleStatusManager(Node):
     """Centralized status tracker for all vehicles."""
@@ -34,14 +36,21 @@ class VehicleStatusManager(Node):
         # Declare and parse namespaces
         self.declare_parameter(
             'namespaces',
-            ['main'],
-            ParameterDescriptor(type=ParameterType.PARAMETER_STRING_ARRAY)
+            "[]",
+            ParameterDescriptor(type=ParameterType.PARAMETER_STRING)
         )
 
         try:
-            self.namespaces = self.get_parameter('namespaces').value
+            raw_value = self.get_parameter('namespaces').value
+            self.namespaces = ast.literal_eval(raw_value) if isinstance(raw_value, str) else raw_value
+            
+            # self.namespaces = self.get_parameter('namespaces').value
             if not all(isinstance(ns, str) for ns in self.namespaces):
                 raise ValueError("Namespaces must be a list of strings.")
+            
+            # Always include global 'default' namespace
+            if 'default' not in self.namespaces:
+                self.namespaces.insert(0, 'default')
         except Exception as e:
             self.get_logger().error(f"Invalid namespaces: {e}")
             return

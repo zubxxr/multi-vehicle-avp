@@ -17,10 +17,11 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String, Int32
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
+import ast
 
 def get_topic(namespace, topic):
     """Returns the correct topic string based on namespace."""
-    return f"/{topic}" if namespace == "main" else f"/{namespace}/{topic}"
+    return f"/{topic}" if namespace == "default" else f"/{namespace}/{topic}"
 
 class VehicleCountManager(Node):
     """Tracks the number of active AVP vehicles."""
@@ -34,15 +35,20 @@ class VehicleCountManager(Node):
         # Declare and read the 'namespaces' parameter
         self.declare_parameter(
             'namespaces',
-            ['main'],
-            ParameterDescriptor(type=ParameterType.PARAMETER_STRING_ARRAY)
+            "[]",
+            ParameterDescriptor(type=ParameterType.PARAMETER_STRING)
         )
 
         # Fetch and validate the parameter
         try:
-            self.namespaces = self.get_parameter('namespaces').value
+            raw_value = self.get_parameter('namespaces').value
+            self.namespaces = ast.literal_eval(raw_value) if isinstance(raw_value, str) else raw_value
             if not isinstance(self.namespaces, list) or not all(isinstance(ns, str) for ns in self.namespaces):
                 raise ValueError("Invalid type inside namespaces")
+
+            # Always include global 'default' namespace
+            if 'default' not in self.namespaces:
+                self.namespaces.insert(0, 'default')
         except Exception as e:
             self.get_logger().error(f"Invalid 'namespaces' parameter. Must be a list of strings. Error: {e}")
             return

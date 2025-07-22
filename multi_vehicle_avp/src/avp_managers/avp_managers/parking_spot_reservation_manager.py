@@ -18,10 +18,11 @@ import rclpy
 from rclpy.node import Node
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 from std_msgs.msg import String
+import ast
 
 # Helper function to format topics based on namespace
 def get_topic(namespace, topic):
-    return f"/{topic}" if namespace == "main" else f"/{namespace}/{topic}"
+    return f"/{topic}" if namespace == "default" else f"/{namespace}/{topic}"
 
 class ReservationManager(Node):
     def __init__(self):
@@ -34,18 +35,20 @@ class ReservationManager(Node):
         # Declare and validate the 'namespaces' parameter
         self.declare_parameter(
             'namespaces',
-            ['main'],
-            ParameterDescriptor(
-                type=ParameterType.PARAMETER_STRING_ARRAY,
-                description='List of namespaces to manage reservation topics for'
-            )
+            "[]",
+            ParameterDescriptor(type=ParameterType.PARAMETER_STRING)
         )
 
         # Fetch and validate the parameter
         try:
-            self.namespaces = self.get_parameter('namespaces').value
+            raw_value = self.get_parameter('namespaces').value
+            self.namespaces = ast.literal_eval(raw_value) if isinstance(raw_value, str) else raw_value
             if not isinstance(self.namespaces, list) or not all(isinstance(ns, str) for ns in self.namespaces):
                 raise ValueError("Invalid type inside namespaces")
+            
+            # Always include global 'default' namespace
+            if 'default' not in self.namespaces:
+                self.namespaces.insert(0, 'default')
         except Exception as e:
             self.get_logger().error(f"Invalid 'namespaces' parameter. Must be a list of strings. Error: {e}")
             return
