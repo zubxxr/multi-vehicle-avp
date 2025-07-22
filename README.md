@@ -11,19 +11,18 @@ source env/bin/activate
 python3 yolo_server.py
 ```
 ```bash
-cd ~/autoware
 source /opt/ros/humble/setup.bash
-source install/setup.bash
+source ~/autoware/install/setup.bash
 ros2 launch autoware_launch e2e_simulator.launch.xml vehicle_model:=awsim_labs_vehicle sensor_model:=awsim_labs_sensor_kit map_path:=/home/ovin/autoware_map/sirc/ launch_vehicle_interface:=true
 ```
 ``` bash
-cd $HOME/zenoh-plugin-ros2dds
-source $HOME/zenoh-plugin-ros2dds/install/setup.bash
+cd ~/zenoh-plugin-ros2dds
+source ~/zenoh-plugin-ros2dds/install/setup.bash
 zenoh_bridge_ros2dds -c zenoh-bridge-awsim.json5
 ```
 ```bash
-cd $HOME/Multi-AVP/multi_vehicle_avp/
-source $HOME/autoware/install/setup.bash
+cd ~/Multi-AVP/multi_vehicle_avp/
+source ~/autoware/install/setup.bash
 source /opt/ros/humble/setup.bash
 source install/setup.bash
 ros2 launch avp_node multi_avp_launch.py vehicle_id:=1 enable_managers:=true namespaces:="['vehicle2']"
@@ -34,16 +33,16 @@ ros2 launch avp_node multi_avp_launch.py vehicle_id:=1 enable_managers:=true nam
 cd ~/autoware
 source /opt/ros/humble/setup.bash
 source install/setup.bash
-ros2 launch autoware_launch e2e_simulator.launch.xml vehicle_model:=awsim_labs_vehicle sensor_model:=awsim_labs_sensor_kit map_path:=/home/zubair/autoware_map/sirc/ launch_vehicle_interface:=true
+ros2 launch autoware_launch e2e_simulator.launch.xml vehicle_model:=awsim_labs_vehicle sensor_model:=awsim_labs_sensor_kit map_path:=$HOME/autoware_map/sirc/ launch_vehicle_interface:=true
 ```
 ``` bash
-cd $HOME/zenoh-plugin-ros2dds
-source $HOME/zenoh-plugin-ros2dds/install/setup.bash
+cd ~/zenoh-plugin-ros2dds
+source ~/zenoh-plugin-ros2dds/install/setup.bash
 zenoh_bridge_ros2dds -c zenoh-bridge-vehicle2.json5 -e tcp/10.0.0.172:7447
 ```
 ```bash
-cd $HOME/Multi-AVP/multi_vehicle_avp/
-source $HOME/autoware/install/setup.bash
+cd ~/Multi-AVP/multi_vehicle_avp/
+source ~/autoware/install/setup.bash
 source /opt/ros/humble/setup.bash
 source install/setup.bash
 ros2 launch avp_node multi_avp_launch.py vehicle_id:=2
@@ -81,7 +80,7 @@ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release --package
 
 ## Queue Planning Sim
 ```bash
-ros2 launch autoware_launch planning_simulator.launch.xml vehicle_model:=awsim_labs_vehicle sensor_model:=awsim_labs_sensor_kit map_path:=/home/zubair/autoware_map/sirc/ launch_vehicle_interface:=true
+ros2 launch autoware_launch planning_simulator.launch.xml vehicle_model:=awsim_labs_vehicle sensor_model:=awsim_labs_sensor_kit map_path:=$HOME/autoware_map/sirc/ launch_vehicle_interface:=true
 
 ```
 ---
