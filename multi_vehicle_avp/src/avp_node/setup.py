@@ -22,8 +22,18 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            # Main AVP node
             'avp_node = avp_node.avp_node:main',
+
+            # Tools
+            'generate_goal_pose_command = avp_node.tools.generate_goal_pose_command:main',
+            'generate_initial_pose_command = avp_node.tools.generate_initial_pose_command:main',
+            'generate_parking_spot_locations = avp_node.tools.generate_parking_spot_locations:main',
+
+            # Debugging
+            'publish_parking_spots = avp_node.debugging.publish_parking_spots:main',
+            'publish_reserved_spots = avp_node.debugging.publish_reserved_spots:main',
+            'npc = avp_node.debugging.npc:main',
         ],
     },
 )
-
