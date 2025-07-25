@@ -4,7 +4,7 @@ This file contains the complete set of commands used to launch the AVP system ac
 
 > This guide assumes all setup steps have already been completed (cloning, building, sourcing, etc.).
 
-## Host 1 (Nitro PC)
+## Host 1
 ```bash
 ~/Unity/UnityHub.AppImage
 ```
@@ -28,7 +28,7 @@ source ~/Multi-AVP/multi_vehicle_avp/install/setup.bash
 ros2 launch avp_node multi_avp_launch.py vehicle_id:=1 enable_managers:=true namespaces:="['vehicle2']"
 ```
 
-## Host 2 (ROG Laptop)
+## Host 2
 ```bash
 source /opt/ros/humble/setup.bash
 source ~/autoware/install/setup.bash
@@ -44,28 +44,7 @@ source ~/autoware/install/setup.bash
 source ~/Multi-AVP/multi_vehicle_avp/install/setup.bash
 ros2 launch avp_node multi_avp_launch.py vehicle_id:=2
 ```
-
 ---
-
-```bash
-pkill -9 -f avp_node
-pkill -9 -f avp_managers
-pkill -9 -f ros2
-```
-
-```bash
-ros2 run rqt_image_view rqt_image_view
-```
-
-
-```bash
-cd $HOME/Multi-AVP
-./echo_avp_topics.sh
-```
-
-```bash
-pkill -f "ros2 topic echo"
-```
 
 ## Build Command
 ```bash
@@ -79,4 +58,3 @@ source /opt/ros/humble/setup.bash
 source ~/autoware/install/setup.bash
 ros2 launch autoware_launch planning_simulator.launch.xml vehicle_model:=awsim_labs_vehicle sensor_model:=awsim_labs_sensor_kit map_path:=$HOME/autoware_map/sirc/ launch_vehicle_interface:=true
 ```
----
