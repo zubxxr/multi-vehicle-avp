@@ -1,9 +1,16 @@
 import rclpy
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSDurabilityPolicy
 from rclpy.node import Node
 from std_msgs.msg import String
 from nav_msgs.msg import Odometry
 from utils.dropoff_and_parking import is_in_drop_off_zone
 import time
+
+qos_profile = QoSProfile(
+    reliability=QoSReliabilityPolicy.RELIABLE,
+    durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
+    depth=1
+)
 
 class AVPCommandListener(Node):
     def __init__(self, route_state_subscriber, motion_state_subscriber, args):
@@ -29,7 +36,7 @@ class AVPCommandListener(Node):
         self.initiate_parking = False
 
         # Publishers
-        self.vehicle_id_pub = self.create_publisher(String, "/avp/vehicle_id", 10)
+        self.vehicle_id_pub = self.create_publisher(String, "/avp/vehicle_id", qos_profile)
         self.local_status_publisher = self.create_publisher(String, '/avp/status', 10)
         self.all_status_publisher = self.create_publisher(String, '/avp/status/update', 10)
         self.queue_request_pub = self.create_publisher(String, 'avp/queue/request', 10)
