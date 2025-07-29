@@ -223,6 +223,10 @@ Follow the **"Open AWSIM Labs project**" step in the **AWSIM Labs Unity Setup**.
 > ```bash
 > git clone ~/https://github.com/autowarefoundation/AWSIM-Labs.git
 > ```
+> In this project, a custom fork of AWSIM Labs is used with minor modifications to support multi-vehicle setups and labeled vehicle views. Clone this version instead:
+> ```bash
+> git clone ~/https://github.com/zubxxr/AWSIM-Labs.git
+> ```
 
 #### Replace the Map Package Link
 In the **"Import external packages"** section, **do not** use the green “Download Map Package” button shown in the docs.
