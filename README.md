@@ -153,6 +153,8 @@ Read the [following](https://autowarefoundation.github.io/autoware-documentation
 The version of [Autoware](https://github.com/autowarefoundation/autoware/tree/release/2024.11) being used is `release/2024.11`. This version was forked and updated to better support the custom parking simulation use case.
 
 #### Setup
+First, add swap memory by following these [instructions](https://autowarefoundation.github.io/autoware-documentation/main/support/troubleshooting/#build-issues).
+
 To install Autoware, follow the instructions on [this page](https://autowarefoundation.github.io/autoware-documentation/main/installation/autoware/source-installation/).
 
 > **Note:** Replace the following command:
