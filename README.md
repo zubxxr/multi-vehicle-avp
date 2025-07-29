@@ -129,7 +129,7 @@ AnyDesk played a crucial supporting role throughout development:
 - File Transfers: AnyDesk made it easy to share files, avoiding USB drives or external cloud services.
 - Lightweight & Convenient: Its low overhead and persistent session features made it ideal for quick setup tasks and ongoing coordination.
 
-#### Setup Workflow
+#### Setup
 
 1. **Initial Setup**:
    - Connect a keyboard and mouse to each system.
@@ -152,6 +152,7 @@ Read the [following](https://autowarefoundation.github.io/autoware-documentation
 
 The version of [Autoware](https://github.com/autowarefoundation/autoware/tree/release/2024.11) being used is `release/2024.11`. This version was forked and updated to better support the custom parking simulation use case.
 
+#### Setup
 To install Autoware, follow the instructions on [this page](https://autowarefoundation.github.io/autoware-documentation/main/installation/autoware/source-installation/).
 
 > **Note:** Replace the following command:
@@ -260,7 +261,7 @@ This isolates their data and avoids topic collisions.
 ![image](https://github.com/user-attachments/assets/c5a7c99a-d0b0-42b4-86f2-ea0ef9b76d84)
 
 
-#### Installing Zenoh ROS 2 Bridge
+#### Setup
 
 1. Install [Rust](https://www.rust-lang.org/tools/install)
 
@@ -339,13 +340,22 @@ As a result, a ROS 2 topic is published containing a list of currently **empty p
 ![image](https://github.com/user-attachments/assets/fd8fad9a-dfba-4936-b6e1-dfc06943eb2d)
 
 
-#### Setup Instructions
+#### Setup
 Run the following commands to create the virtual environment and install requirements:
 ```bash
 cd ~/Multi-Vehicle-Autonomous-Valet-Parking/yolo_detection_server 
 python3 -m venv venv
 source ~/Multi-Vehicle-Autonomous-Valet-Parking/yolo_detection_server/venv/bin/activate
 pip install -r requirements.txt
+```
+
+### AVP Orchestration Node
+[]
+
+#### Setup
+```bash
+cd ~/multi-vehicle-avp/multi_vehicle_avp/
+colcon build
 ```
 
 ---
