@@ -40,7 +40,7 @@ class AVPCommandListener(Node):
         self.local_status_publisher = self.create_publisher(String, '/avp/status', 10)
         self.all_status_publisher = self.create_publisher(String, '/avp/status/update', 10)
         self.queue_request_pub = self.create_publisher(String, 'avp/queue/request', 10)
-        self.vehicle_count_request_pub = self.create_publisher(String, 'avp/vehicle_count/request', 10)
+        self.vehicle_count_request_pub = self.create_publisher(String, 'avp/vehicle_count/request', qos_profile)
         self.reserved_spot_request_pub = self.create_publisher(String, 'avp/reserved_parking_spots/request', 10)
         self.reserved_spot_remove_pub = self.create_publisher(String, 'avp/reserved_parking_spots/remove', 10)
         self.queue_remove_pub = self.create_publisher(String, 'avp/queue/remove', 10)
