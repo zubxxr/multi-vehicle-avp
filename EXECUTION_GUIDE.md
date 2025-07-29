@@ -24,7 +24,7 @@ zenoh_bridge_ros2dds -c ~/multi-vehicle-avp/zenoh_configs/zenoh-bridge-awsim.jso
 ```bash
 source /opt/ros/humble/setup.bash
 source ~/autoware/install/setup.bash
-source ~/multi_vehicle_avp/install/setup.bash
+source ~/multi-vehicle-avp/multi_vehicle_avp/install/setup.bash
 ros2 launch avp_node multi_avp_launch.py vehicle_id:=1 enable_managers:=true namespaces:="['vehicle2']"
 ```
 
@@ -41,7 +41,7 @@ zenoh_bridge_ros2dds -c ~/multi-vehicle-avp/zenoh_configs/zenoh-bridge-vehicle2.
 ```bash
 source /opt/ros/humble/setup.bash
 source ~/autoware/install/setup.bash
-source ~/multi_vehicle_avp/install/setup.bash
+source ~/multi-vehicle-avp/multi_vehicle_avp/install/setup.bash
 ros2 launch avp_node multi_avp_launch.py vehicle_id:=2
 ```
 ---
