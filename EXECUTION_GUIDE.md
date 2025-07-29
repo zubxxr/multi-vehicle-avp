@@ -9,6 +9,7 @@ This file contains the complete set of commands used to launch the AVP system ac
 ~/Unity/UnityHub.AppImage
 ```
 ```bash
+cd ~/multi-vehicle-avp/yolo_detection_server/
 source ~/multi-vehicle-avp/yolo_detection_server/venv/bin/activate
 python3 yolo_server.py
 ```
