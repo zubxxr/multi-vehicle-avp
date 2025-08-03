@@ -97,14 +97,17 @@ Each host machine is responsible for a specific set of modules in the distribute
 - **Host 2 (ROG Laptop)** runs:
   - Autoware (vehicle 2 stack, with `/vehicle2` namespace)
   - A second AVP orchestration node (**no managers**, namespace-aware)
-  - Zenoh Bridge (in router mode)
+  - Zenoh Bridge (in client mode)
 
 This setup is ideal for testing multi-vehicle behavior, decentralized planning, and V2X communication strategies in a scalable simulated environment.
 
 ---
 
 ## Software Installation and Setup
+This section provides installation steps for each required component in the AVP system, including Autoware, Zenoh, Unity, and the YOLOv5 detection server.
+> Refer to [Roles of Each Machine](roles-of-each-machine) to determine where each tool should be installed, depending on your setup.
 
+### Repository Cloning
 Before installing any softwares, start by cloning this repository:
 
 ```bash
@@ -112,13 +115,17 @@ cd ~
 git clone https://github.com/zubxxr/Multi-Vehicle-Autonomous-Valet-Parking.git
 ```
 
-### Barrier & AnyDesk (Shared Control and Remote File Access Across Hosts)
-Managing multiple machines can be tedious, especially when frequently switching between keyboards, mice, or needing to transfer files across systems.
+This repository contains:
+- The AVP orchestration node
+- YOLOv5-based detection server
+- Parking Spot Detection Unity code
+- Lanelet2 + point cloud map files
+- Zenoh bridge configuration files
 
-This setup originally used **AnyDesk** for remote control but eventually integrated **Barrier** for a more seamless, hardware-free workflow. While Barrier is ideal for controlling multiple machines with one keyboard and mouse, **AnyDesk remained essential for remote access and file transfer**, particularly after reboots.
+### Barrier & AnyDesk (Shared Control and Remote File Access Across Hosts)
+Managing multiple machines can be difficult and overwhelming without an efficient way of coordinating input or transferring files.
 
 #### Barrier: Shared Keyboard and Mouse Across Hosts
-
 Barrier allows a single keyboard and mouse to control multiple systems by moving your cursor between screens as if they were part of one extended desktop. It greatly improves usability when running Autoware and other tools across multiple hosts.
 
 #### AnyDesk: Remote Access and File Transfer
@@ -132,7 +139,7 @@ AnyDesk played a crucial supporting role throughout development:
 #### Setup
 
 1. **Initial Setup**:
-   - Connect a keyboard and mouse to each system.
+   - Connect a keyboard and mouse to each host.
    - Install and configure **[AnyDesk](https://anydesk.com/en)** on all hosts.
      - Be sure to **set a password** in AnyDesk so you can connect automatically without needing to manually accept each time.
    - Install **[Barrier](https://github.com/debauchee/barrier)** on each host.
@@ -142,21 +149,29 @@ AnyDesk played a crucial supporting role throughout development:
 
 2. **Post-Reboot Recovery**:
    - Barrier may not auto-launch on reboot.
-   - Instead of reconnecting physical peripherals, use **AnyDesk** to remotely access the host and launch Barrier.
+   - Instead of reconnecting a keyboard and mouse, use **AnyDesk** to remotely access the host and launch Barrier.
    - Once Barrier is active, full keyboard/mouse control is restored.
   
 > **Note**: While AnyDesk and Barrier are not part of the AVP runtime stack, they were vital for a smooth multi-host development experience. They helped reduce downtime, avoid errors, and speed up debugging during intensive multi-machine coordination.
 
 ### Autoware
-Read the [following](https://autowarefoundation.github.io/autoware-documentation/main/installation/) to see the hardware requirements. 
+Autoware is an open-source autonomous driving stack designed for full-sized self-driving vehicles. It provides core modules for localization, perception, planning, and control.
 
-The version of [Autoware](https://github.com/autowarefoundation/autoware/tree/release/2024.11) being used is `release/2024.11`. This version was forked and updated to better support the custom parking simulation use case.
+To run the AVP system, Autoware must be installed on each device that is responsible for controlling a vehicle. In other words, every host running an Autoware instance (e.g., vehicle1, vehicle2, etc.) needs a full installation.
+
+If your machine is powerful enough, you may choose to run both AWSIM Labs and Autoware (for one or more vehicles) on a single host. Otherwise, it's recommended to distribute the workload across multiple machines—especially if you're using laptops or other resource-constrained systems.
+
+In this project, the Nitro PC (see hardware specs) was powerful enough to run both AWSIM Labs and Autoware for vehicle1.
+> If your machine has similar or better specifications than the Nitro PC, you should be able to run both components together without major issues.
+
+Refer to [Autoware’s hardware requirements](https://autowarefoundation.github.io/autoware-documentation/main/installation/) and compare them with your own system before deciding on your deployment strategy.
+
+The version of [Autoware](https://github.com/autowarefoundation/autoware/tree/release/2024.11) used in this project is release/2024.11, which was forked and customized to support the AVP scenario.
 
 #### Setup
-First, add swap memory by following these [instructions](https://autowarefoundation.github.io/autoware-documentation/main/support/troubleshooting/#build-issues).
+Before installation, increase your swap memory by following these [instructions](https://autowarefoundation.github.io/autoware-documentation/main/support/troubleshooting/#build-issues).
 
 To install Autoware, follow the instructions on [this page](https://autowarefoundation.github.io/autoware-documentation/main/installation/autoware/source-installation/).
-
 > **Note:** Replace the following command:
 > 
 > ```bash
@@ -172,11 +187,12 @@ To install Autoware, follow the instructions on [this page](https://autowarefoun
 ---
 
 ### AWSIM Labs
+AWSIM Labs is a Unity-based 3D simulation environment tailored for testing autonomous vehicles using Autoware. It provides realistic visuals, physics, and ROS 2 integration to simulate ego vehicle behavior in structured environments like parking lots.
+> It is recommended to install AWSIM Labs on the most powerful host in your system (e.g., Nitro PC), as it is the most resource-intensive component in the AVP pipeline.
 
 Setting up AWSIM Labs requires the installation of Unity. This whole section will reference the [AWSIM Labs Unity Setup](https://autowarefoundation.github.io/AWSIM-Labs/main/GettingStarted/SetupUnityProject/).
 
 Follow the **"Environment preparation"** section and carefully read the **"ROS 2"** section to get started.
-
 > The **"ROS 2"** section mentions that your environment should not have ROS 2 sourced.  
 > It is recommended to **remove any ROS 2 sourcing lines from your `~/.bashrc`**, and instead **manually source ROS 2 only when needed**, to avoid environment conflicts.
 
@@ -216,16 +232,14 @@ These two steps complete the **"Unity installation**" section in the **AWSIM Lab
 
 #### Open AWSIM Labs Project 
 Follow the **"Open AWSIM Labs project**" step in the **AWSIM Labs Unity Setup**. 
-
-> **Note:** At the time of writing, the documentation incorrectly tells you to clone:
+> **Note:** Replace the following command:
+> 
 > ```bash
-> git clone git@github.com:autowarefoundation/AWSIM.git
+> git clone https://github.com/autowarefoundation/AWSIM-Labs.git
 > ```
-> The correct repository is:
-> ```bash
-> git clone ~/https://github.com/autowarefoundation/AWSIM-Labs.git
-> ```
-> In this project, a custom fork of AWSIM Labs is used with minor modifications to support multi-vehicle setups and labeled vehicle views. Clone this version instead:
+> 
+> with:
+> 
 > ```bash
 > git clone ~/https://github.com/zubxxr/AWSIM-Labs.git
 > ```
@@ -249,8 +263,14 @@ After successful completion, the simulation will be running (see image below), w
 ---
 
 ### Zenoh
-This step covers setting up the Zenoh bridge on both hosts using their respective config files. This enables communication between the two ego vehicles simulated in AWSIM Labs and their corresponding Autoware clients.
+Zenoh is a lightweight communication middleware that bridges ROS 2 topics across machines. In this AVP system, Zenoh enables real-time communication between AWSIM Labs (simulating two ego vehicles) and their respective Autoware instances, which may be running on separate hosts.
 
+Since both ego vehicles in AWSIM Labs publish the same set of ROS 2 topics, Zenoh is used to avoid topic collisions and namespace the second vehicle’s topics before bridging them to a second machine. This ensures clean separation between the /vehicle1 (default) and /vehicle2 data pipelines.
+> Zenoh should be installed on every host. Host 1 runs Zenoh in router mode, while Host 2 runs in client mode and connects to Host 1 via IP.
+
+Each Zenoh bridge requires configuration files to enable communication between the two ego vehicles simulated in AWSIM Labs and their corresponding Autoware clients.
+
+#### ROS 2 Topic Namespacing
 AWSIM Labs is configured to simulate two ego vehicles, both publishing identical sets of ROS 2 topics. To avoid topic collisions, the second vehicle is manually namespaced:
 
 - `EgoVehicle_1` runs locally on the same host as AWSIM Labs and does **not** require a namespace (default `/`).
@@ -265,7 +285,6 @@ This isolates their data and avoids topic collisions.
 **Example of Host 2 Ego Vehicle (EgoVehicle_2):**
 
 ![image](https://github.com/user-attachments/assets/c5a7c99a-d0b0-42b4-86f2-ea0ef9b76d84)
-
 
 #### Setup
 
@@ -336,7 +355,7 @@ zenoh_bridge_ros2dds -e tcp/10.0.0.172:7447
 
 ---
 
-### YOLOv5
+### YOLOv5-Based Parking Spot Detection Module
 The YOLOv5 server runs locally on the same machine as AWSIM Labs. It captures frames from the overhead camera in the simulation, performs vehicle detection using YOLOv5, extracts the bounding box coordinates, and sends them to Unity for further processing.
 
 In Unity, custom scripts receive these bounding boxes, draws them on the overhead view, and compares them with predefined parking spot coordinates. If there is any overlap, the spot is marked as **occupied**.
@@ -344,7 +363,6 @@ In Unity, custom scripts receive these bounding boxes, draws them on the overhea
 As a result, a ROS 2 topic is published containing a list of currently **empty parking spots**, which can be visualized in the bottom-left corner of the simulation (see image below):
 
 ![image](https://github.com/user-attachments/assets/fd8fad9a-dfba-4936-b6e1-dfc06943eb2d)
-
 
 #### Setup
 Run the following commands to create the virtual environment and install requirements:
@@ -356,12 +374,25 @@ pip install -r requirements.txt
 ```
 
 ### AVP Orchestration Node
-[]
+The AVP Orchestration Node is the central control module that coordinates goal assignment, parking logic, and reservation handling across multiple vehicles. Each vehicle is assigned a dedicated AVP node instance—either with or without manager responsibilities—depending on the host’s role. The node also interfaces with RViz for visualization and command input.
 
+This node must be built and installed on every host running an Autoware stack.
+Its behavior depends on the host:
+
+- Host 1 (with AWSIM Labs): runs the AVP node with manager responsibilities enabled. This instance oversees system-wide coordination, including assigning goals and managing parking spot reservations.
+- Host 2 (or additional hosts): run namespace-aware AVP node instances without manager functionality, only controlling their respective vehicles.
+    
 #### Setup
+To build the node, use the previously cloned repository:
+
 ```bash
 cd ~/multi-vehicle-avp/multi_vehicle_avp/
 colcon build
+```
+
+Be sure to source the workspace after building:
+```bash
+source install/setup.bash
 ```
 
 ---
@@ -412,13 +443,13 @@ ros2 launch autoware_launch e2e_simulator.launch.xml vehicle_model:=awsim_labs_v
 #### Host 1
 ```bash
 source ~/zenoh-plugin-ros2dds/install/setup.bash
-zenoh_bridge_ros2dds -c ~/Multi-Vehicle-Autonomous-Valet-Parking/zenoh_configs/zenoh-bridge-awsim.json5
+zenoh_bridge_ros2dds -c ~/multi-vehicle-avp/zenoh_configs/zenoh-bridge-awsim.json5
 ```
 
 #### Host 2
 ```bash
 source ~/zenoh-plugin-ros2dds/install/setup.bash
-zenoh_bridge_ros2dds -c ~/Multi-Vehicle-Autonomous-Valet-Parking/zenoh_configs/zenoh-bridge-vehicle2.json5 -e tcp/10.0.0.172:7447
+zenoh_bridge_ros2dds -c ~/multi-vehicle-avp/zenoh_configs/zenoh-bridge-vehicle2.json5 -e tcp/10.0.0.172:7447
 ```
 > Use the IP address retrieved from [Installing Zenoh ROS 2 Bridge](#installing-zenoh-ros-2-bridge) step 3. In this case, its 10.0.0.172.
   
@@ -428,7 +459,7 @@ zenoh_bridge_ros2dds -c ~/Multi-Vehicle-Autonomous-Valet-Parking/zenoh_configs/z
 ```bash
 source /opt/ros/humble/setup.bash
 source ~/autoware/install/setup.bash
-source ~/Multi-AVP/multi_vehicle_avp/install/setup.bash
+source ~/multi-vehicle-avp/multi_vehicle_avp/install/setup.bash
 ros2 launch avp_node multi_avp_launch.py vehicle_id:=1 enable_managers:=true namespaces:="['vehicle2']"
 ```
 
@@ -436,7 +467,7 @@ ros2 launch avp_node multi_avp_launch.py vehicle_id:=1 enable_managers:=true nam
 ```bash
 source /opt/ros/humble/setup.bash
 source ~/autoware/install/setup.bash
-source ~/Multi-AVP/multi_vehicle_avp/install/setup.bash
+source ~/multi-vehicle-avp/multi_vehicle_avp/install/setup.bash
 ros2 launch avp_node multi_avp_launch.py vehicle_id:=2
 ```
 
