@@ -187,12 +187,23 @@ To install Autoware, follow the instructions on [this page](https://autowarefoun
 ---
 
 ### AWSIM Labs
-AWSIM Labs is a Unity-based 3D simulation environment tailored for testing autonomous vehicles using Autoware. It provides realistic visuals, physics, and ROS 2 integration to simulate ego vehicle behavior in structured environments like parking lots.
+[AWSIM Labs](https://autowarefoundation.github.io/AWSIM-Labs/main/) is a Unity-based 3D simulation environment tailored for testing autonomous vehicles using Autoware. It provides realistic visuals, physics, and ROS 2 integration to simulate ego vehicle behavior in structured environments like parking lots.
 > It is recommended to install AWSIM Labs on the most powerful host in your system (e.g., Nitro PC), as it is the most resource-intensive component in the AVP pipeline.
 
 Setting up AWSIM Labs requires the installation of Unity. This whole section will reference the [AWSIM Labs Unity Setup](https://autowarefoundation.github.io/AWSIM-Labs/main/GettingStarted/SetupUnityProject/).
 
-Follow the **"Environment preparation"** section and carefully read the **"ROS 2"** section to get started.
+#### Getting Started
+1. Add the following lines to the ~/.bashrc file:
+```bash
+if [ ! -e /tmp/cycloneDDS_configured ]; then
+    sudo sysctl -w net.core.rmem_max=2147483647
+    sudo sysctl -w net.ipv4.ipfrag_time=3
+    sudo sysctl -w net.ipv4.ipfrag_high_thresh=134217728     # (128 MB)
+    sudo ip link set lo multicast on
+    touch /tmp/cycloneDDS_configured
+fi
+```
+2. Follow the **"Environment preparation"** section and carefully read the **"ROS 2"** section to get started.
 > The **"ROS 2"** section mentions that your environment should not have ROS 2 sourced.  
 > It is recommended to **remove any ROS 2 sourcing lines from your `~/.bashrc`**, and instead **manually source ROS 2 only when needed**, to avoid environment conflicts.
 
@@ -330,8 +341,20 @@ zenoh_bridge_ros2dds -e tcp/10.0.0.172:7447
 
 > **Tip:** If you’re unsure which interface is active, check which one shows an `inet` address in the `10.x.x.x` or `192.168.x.x` range and says `state UP`.
 
+4. Set up CycloneDDS for cross-host communication:
 
-3. **Launch the Zenoh bridge with host-specific configuration:**
+    A) Copy the CycloneDDS configuration file to the home directory.
+    ```bash
+    cp ~/multi-vehicle-avp/cyclonedds.xml ~/cyclonedds.xml
+    ```
+    B) Add the Configuation to the .bashrc file.
+    ```bash
+    export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+    export CYCLONEDDS_URI=/home/your_username/cyclonedds.xml
+    ```
+    > Replace your_username with your computer's username
+
+5. Launch the Zenoh bridge with host-specific configuration:
    
    Both configs are available in the repository previously cloned. 
    ##### A) Host 1
