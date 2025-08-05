@@ -26,11 +26,9 @@ namespace AWSIM
         private YoloIntegration _yoloIntegration;
 
         private ISubscription<std_msgs.msg.String> _removalSub;
-
         private ISubscription<std_msgs.msg.String> _reservationSub;
 
         private List<int> _currentEmptySpots = new List<int>();
-
         private HashSet<int> _reservedSpots = new HashSet<int>();
 
 
@@ -81,7 +79,6 @@ namespace AWSIM
                         FilterReservedSpotsAndRepublish();
                     }
                 });
-
         }
 
         private void CreatePublishers()

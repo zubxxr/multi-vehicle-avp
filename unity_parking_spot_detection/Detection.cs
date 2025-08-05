@@ -1,4 +1,3 @@
-// Detection.cs
 using System;
 
 [Serializable]

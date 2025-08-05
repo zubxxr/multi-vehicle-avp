@@ -1,5 +1,5 @@
 using UnityEngine;
-using System.Linq; // For LINQ methods like OrderBy
+using System.Linq;
 using System.Collections.Generic; 
 
 public class ParkingSpot : MonoBehaviour
@@ -81,7 +81,6 @@ public class ParkingSpot : MonoBehaviour
         }
     }
 
-
     /// <summary>
     /// Transforms the parking spot bounds to the overhead camera's screen-space coordinates
     /// and draws them in the UI.
@@ -100,7 +99,6 @@ public class ParkingSpot : MonoBehaviour
             bounds.width,
             bounds.height
         );
-
 
         // Convert bounds to world space corners
         Vector3 bottomLeft = new Vector3(adjustedBounds.xMin, transform.position.y, adjustedBounds.yMin);
@@ -128,7 +126,6 @@ public class ParkingSpot : MonoBehaviour
                 screenCorners[i].y * viewSize.y
             );
         }
-
         // Draw the rectangle in the UI
         DrawRectangleInView(uiCorners, cameraViewRect);
     }
@@ -294,26 +291,10 @@ public class ParkingSpot : MonoBehaviour
                 (detection.ymax - detection.ymin) / imageHeight * viewSize.y
             );
 
-            // // Create detection rect in UI space
-            // Rect detectionRect = new Rect(
-            //     detection.xmin / imageWidth * viewSize.x,
-            //     detection.ymin / imageHeight * viewSize.y,
-            //     (detection.xmax - detection.xmin) / imageWidth * viewSize.x,
-            //     (detection.ymax - detection.ymin) / imageHeight * viewSize.y
-            // );
-
-            // if (spotID == "5") {
-            // Debug.Log($"[ParkingSpot] DetectionRect: {detectionRect}");
-
-            // Debug.Log($"[ParkingSpot] DetectionRect: {detectionRect}");
-            
-            // Debug.Log($"[ParkingSpot] Detection - XMin: {detection.xmin}, YMin: {detection.ymin}, XMax: {detection.xmax}, YMax: {detection.ymax}, Width: {detectionRect.width}, Height: {detectionRect.height}");
-
             // Check for overlap
             if (uiBounds.Overlaps(detectionRect))
             {
                 isOccupied = true;
-                // Debug.Log($"Spot {spotID} is occupied by detection.");
                 break;
             }
         }
@@ -344,7 +325,7 @@ public class ParkingSpot : MonoBehaviour
 
         bounds = CalculateBounds();
 
-        // For Debugging
+        // ***** UNCOMMENT TO SEE PARKING SPOT PLANES FOR DEBUGGING *****
         // CreateFillPlane();
     }
 
@@ -357,6 +338,7 @@ public class ParkingSpot : MonoBehaviour
             renderer.material.color = color;
         }
     }
+
     private Rect CalculateBounds()
     {
         if (parkingLines.Length < 2)
@@ -404,7 +386,6 @@ public class ParkingSpot : MonoBehaviour
             combinedBounds.size.x,
             combinedBounds.size.z
         );
-        
 
         return finalBounds;
     }
@@ -474,11 +455,8 @@ public class ParkingSpot : MonoBehaviour
         fillMaterial.color = Color.clear; // Initially transparent
         fillPlane.GetComponent<Renderer>().material = fillMaterial;
 
-
         // Disable the collider
         Destroy(fillPlane.GetComponent<Collider>());
-        // Debug.Log($"Created fill plane for {id} at {fillPlane.transform.position} with scale {fillPlane.transform.localScale}");
-
     }
 
     private Quaternion CalculateAverageRotation()
@@ -504,7 +482,6 @@ public class ParkingSpot : MonoBehaviour
 
         // Construct the average rotation
         Quaternion averageRotation = Quaternion.LookRotation(averageForward, averageUp);
-        // Debug.Log($"Average rotation for {id}: {averageRotation.eulerAngles}");
         return averageRotation;
     }
 
@@ -520,7 +497,6 @@ public class ParkingSpot : MonoBehaviour
             Debug.LogError($"Fill plane not created for {id}");
         }
     }
-
 
     public void ClearFillColor()
     {
@@ -544,6 +520,4 @@ public class ParkingSpot : MonoBehaviour
             Debug.LogError($"Fill plane is not created for {id}");
         }
     }
-
-
 }

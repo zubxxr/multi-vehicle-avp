@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using UnityEngine.UI;
-using System.Linq; // For LINQ methods like OrderBy
+using System.Linq;
 
 public class YoloIntegration : MonoBehaviour
 {   
@@ -19,8 +19,7 @@ public class YoloIntegration : MonoBehaviour
 
     [SerializeField]
     public List<ParkingSpot> parkingSpots = new List<ParkingSpot>(); // List of parking spots
-
-
+    
     public List<string> emptyParkingSpots = new List<string>(); // List of empty parking spot IDs
 
     public event Action<string> OnParkingSpotsUpdated;
@@ -34,13 +33,6 @@ public class YoloIntegration : MonoBehaviour
 
     void Update()
     {
-        // if (Input.GetKeyDown(KeyCode.Y)) // Press 'Y' to capture and send image
-        // {
-        //     CaptureAndSend();
-        // }
-        
-        
-        // Start calling CaptureAndSend every 2 seconds, with an initial delay of 0 seconds.
         if (!isCoroutineRunning)
         {
             StartCoroutine(CaptureAndSendRoutine());
@@ -71,9 +63,9 @@ public class YoloIntegration : MonoBehaviour
     {   
         yield return new WaitForSeconds(2f);
 
-        while (true) // This will loop indefinitely
+        while (true) 
         {
-            CaptureAndSend();  // Call the function
+            CaptureAndSend(); 
             yield return new WaitForSeconds(2f); // Wait for 2 seconds before calling again
         }
     }
@@ -155,7 +147,7 @@ public class YoloIntegration : MonoBehaviour
 
             spot.IsOccupiedByYOLO(detections.ToList(), imageWidth, imageHeight, spot.id); // sets IsOccupied and calls UpdateColor()
 
-            // Now draw the UI rectangle after it's updated
+            // Draw the UI rectangle after it's updated
             spot.DrawInCameraView();
 
             if (!spot.IsOccupied)
@@ -182,10 +174,6 @@ public class YoloIntegration : MonoBehaviour
             // Calculate width and height
             float detectionWidth = localXMax - localXMin;
             float detectionHeight = localYMax - localYMin;
-
-            // Debug: Output the detection dimensions (Width and Height)
-            // Debug.Log($"Detection {detection.name} - XMin: {localXMin}, YMin: {localYMin}, XMax: {localXMax}, YMax: {localYMax}, Width: {detectionWidth}, Height: {detectionHeight}");
-
             float xOffset = -255.31916f;
             float yOffset = -133.89724f;
 
@@ -202,10 +190,6 @@ public class YoloIntegration : MonoBehaviour
                 localYMax - localYMin + 20
             );
 
-            // Debug.Log($"[BoundingBox] Position - Anchored Position: {rt.anchoredPosition}, Size Delta: {rt.sizeDelta}");
-
-            // Debug.Log($"[BoundingBox] Position - Anchored Position: {rt.anchoredPosition}, Size Delta: {rt.sizeDelta}");
-
             Text label = box.GetComponentInChildren<Text>();
             if (label != null)
             {
@@ -219,12 +203,10 @@ public class YoloIntegration : MonoBehaviour
                     labelRect.anchoredPosition = new Vector2(75, 28);
                 }
             }
-
             boundingBoxes.Add(box);
         }
 
         Debug.Log($"Empty Parking Spots: {string.Join(", ", emptyParkingSpots)}");
         OnParkingSpotsUpdated?.Invoke(string.Join(",", emptyParkingSpots));  // Pass a comma-separated string
-        
     }
 }
