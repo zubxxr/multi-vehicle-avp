@@ -203,7 +203,21 @@ if [ ! -e /tmp/cycloneDDS_configured ]; then
     touch /tmp/cycloneDDS_configured
 fi
 ```
-2. Follow the **"Environment preparation"** section and carefully read the **"ROS 2"** section to get started.
+
+2. Set up CycloneDDS:
+
+    A) Copy the CycloneDDS configuration file to the home directory.
+    ```bash
+    cp ~/multi-vehicle-avp/cyclonedds.xml ~/cyclonedds.xml
+    ```
+    B) Add the Configuation to the .bashrc file.
+    ```bash
+    export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+    export CYCLONEDDS_URI=/home/your_username/cyclonedds.xml
+    ```
+    > Replace your_username with your computer's username
+
+3. Follow the **"Environment preparation"** section and carefully read the **"ROS 2"** section to get started.
 > The **"ROS 2"** section mentions that your environment should not have ROS 2 sourced.  
 > It is recommended to **remove any ROS 2 sourcing lines from your `~/.bashrc`**, and instead **manually source ROS 2 only when needed**, to avoid environment conflicts.
 
