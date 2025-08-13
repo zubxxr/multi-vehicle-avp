@@ -20,6 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'generate_parking_spot_locations = avp_node.tools.generate_parking_spot_locations:main',
         ],
     },
 )
