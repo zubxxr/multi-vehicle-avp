@@ -25,18 +25,5 @@ This setup leverages **Zenoh** for ROS 2 topic synchronization, enabling each ve
 ---
 
 ## Getting Started and Documentation
-[https://zubxxr.github.io/multi-vehicle-avp](https://zubxxr.github.io/multi-vehicle-avp)
+See [Getting Started](GettingStarted/SystemArchitecture/index.md).
 
----
-
-## License
-This project is licensed under the Apache License 2.0.
-
----
-
-## Contact
-For questions, suggestions, or collaboration opportunities, feel free to reach out:
-
-- **Author:** Zubair Islam  
-- **Email:** zubxxr@gmail.com  
-- **LinkedIn:** [linkedin.com/in/zubairislam02](https://www.linkedin.com/in/zubairislam02/)
