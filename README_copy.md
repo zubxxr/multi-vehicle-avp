@@ -52,7 +52,7 @@ This setup is ideal for testing multi-vehicle behavior, decentralized planning, 
 
 ---
 
-## Software Installation and Setup
+## Software Setup and Setup
 This section provides installation steps for each required component in the AVP system, including Autoware, Zenoh, Unity, and the YOLOv5 detection server.
 > Refer to [Roles of Each Machine](roles-of-each-machine) to determine where each tool should be installed, depending on your setup.
 
