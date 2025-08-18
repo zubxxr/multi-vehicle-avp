@@ -26,9 +26,12 @@ This setup leverages **Zenoh** for ROS 2 topic synchronization, enabling each ve
 
 ## Getting Started
 
-To get started with running the AVP system, see the [System Architecture](GettingStarted/SystemArchitecture/index.md) page.
+This AVP implementation builds on the [Multi-Vehicle AV Framework](https://zubxxr.github.io/multi-vehicle-framework). Make sure the framework is installed and set up before proceeding.  
 
-For a condensed list of frequently used commands, see the [Developer Quick Commands](DeveloperGuide/QuickCommands/index.md) page.
+Once the framework is ready, see the [System Architecture](GettingStarted/SystemArchitecture/index.md) page to begin running the AVP system.  
+
+For a condensed list of frequently used commands, refer to the [Developer Quick Commands](DeveloperGuide/QuickCommands/index.md) page.  
+
 
 ## Troubleshooting 
 
