@@ -6,7 +6,7 @@
 ![ROS 2 Humble](https://img.shields.io/badge/ROS2-Humble-purple?logo=ros)
 ![Zenoh](https://img.shields.io/badge/Zenoh-1.4.0-orange?logo=zenoh)
 ![YOLOv5](https://img.shields.io/badge/YOLO-v5-red?logo=github)
-![AVP Node](https://img.shields.io/badge/AVP_Node-Python-black?logo=robotframework)
+![AVP Node](https://img.shields.io/badge/AVP_Node-custom-black?logo=robotframework)
 ![License](https://img.shields.io/badge/License-Apache%202.0-blue?logo=apache)
 
 The **Multi-Vehicle AVP** system extends the **Multi-Vehicle Framework** to support **multiple vehicles operating in a shared simulation environment across different physical hosts**.  

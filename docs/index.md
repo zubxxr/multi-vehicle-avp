@@ -6,10 +6,10 @@
 ![ROS 2 Humble](https://img.shields.io/badge/ROS2-Humble-purple?logo=ros)
 ![Zenoh](https://img.shields.io/badge/Zenoh-1.4.0-orange?logo=zenoh)
 ![YOLOv5](https://img.shields.io/badge/YOLO-v5-red?logo=github)
-![AVP Node](https://img.shields.io/badge/AVP_Node-Python-black?logo=robotframework)
+![AVP Node](https://img.shields.io/badge/AVP_Node-custom-black?logo=robotframework)
 ![License](https://img.shields.io/badge/License-Apache%202.0-blue?logo=apache)
 
-The **Multi-Vehicle AVP** system extends the **Multi-Vehicle Framework** to support **multiple vehicles operating in a shared simulation environment across different physical hosts**.  
+The **Multi-Vehicle AVP** system extends the [Multi-Vehicle AV Framework](https://zubxxr.github.io/multi-vehicle-framework) to support **multiple vehicles operating in a shared simulation environment across different physical hosts**.  
 
 This setup leverages **Zenoh** for ROS 2 topic synchronization, enabling each vehicle to operate its own Autoware stack while coordinating parking decisions in real-time.
 
@@ -26,8 +26,10 @@ This setup leverages **Zenoh** for ROS 2 topic synchronization, enabling each ve
 
 ## Getting Started
 
-First, make sure the [Multi-Vehicle AV Framework](https://zubxxr.github.io/multi-vehicle-framework) is installed and set up.
-
-Then, to get started with running the AVP system, see the [System Architecture](GettingStarted/SystemArchitecture/index.md) page.
+To get started with running the AVP system, see the [System Architecture](GettingStarted/SystemArchitecture/index.md) page.
 
 For a condensed list of frequently used commands, see the [Developer Quick Commands](DeveloperGuide/QuickCommands/index.md) page.
+
+## Troubleshooting 
+
+Refer to [Issues](https://github.com/zubxxr/multi-vehicle-framework/issues) to see if the issue has been addressed. Otherwise, feel free to open one.

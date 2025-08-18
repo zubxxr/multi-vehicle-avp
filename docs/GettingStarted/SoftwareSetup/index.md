@@ -5,6 +5,8 @@ This section provides installation steps for each required component in the AVP 
 
 > Refer to [Host Roles](../SystemArchitecture/index.md/#host-roles) to determine where each tool should be installed.
 
+### Multi-Vehicle AV Framework
+Follow the **Getting Started** sections in the [Multi-Vehicle AV Framework](https://zubxxr.github.io/multi-vehicle-framework) to setup and simulate the framework.
 
 ### Repository Cloning
 
@@ -23,8 +25,6 @@ git clone https://github.com/zubxxr/multi-vehicle-avp.git -b release/2025.08
 cd ~
 git clone https://github.com/zubxxr/multi-vehicle-avp.git
 ```
-
-
 
 This repository contains:
 
@@ -64,18 +64,12 @@ The Multi-Vehicle AVP Orchestration Module is the central control module that co
 This node must be built and installed on every host running an Autoware stack.
 
     
-#### Setup
+#### AVP Module Setup
 
 Build the AVP Module.
-
 ```bash
 cd ~/multi-vehicle-avp/multi_vehicle_avp/
 colcon build
-```
-
-Be sure to source the workspace after building:
-```bash
-source install/setup.bash
 ```
 
 ---
