@@ -1,5 +1,8 @@
 # System Architecture
 
+The Autonomous Valet Parking (AVP) system is built as an extension of the core [Multi-Vehicle AV Framework](https://zubxxr.github.io/multi-vehicle-framework).
+It relies on the same architecture, but with added orchestration logic, manager nodes, and namespace handling to enable multi-vehicle parking coordination.
+
 ## Software Stack and Version Overview
 
 
@@ -41,4 +44,4 @@ See [Scaling for Multiple Vehicles](scaling-multi-vehicle.md).
 
 ---
 
-**Next Steps:** Proceed to [Software Setup](../SoftwareSetup/index.md) once you understand the overall setup and machine roles.
+**Next Steps:** Proceed to [Software Setup](../SoftwareSetup/index.md).

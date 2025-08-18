@@ -44,6 +44,7 @@ ros2 launch autoware_launch e2e_simulator.launch.xml vehicle_model:=awsim_labs_v
 source ~/zenoh-plugin-ros2dds/install/setup.bash
 zenoh_bridge_ros2dds -c ~/multi-vehicle-avp/zenoh_configs/zenoh-bridge-vehicle2.json5 -e tcp/10.0.0.172:7447
 ```
+> Remember to replace IP.
 
 ```bash
 source /opt/ros/humble/setup.bash
