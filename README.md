@@ -16,11 +16,13 @@ This setup leverages **Zenoh** for ROS 2 topic synchronization, enabling each ve
 ---
 
 ## Features
-- Multi-host, multi-vehicle AVP simulation
-- Zenoh-based distributed ROS 2 topic bridging
-- Parking spot reservation & conflict resolution
-- Namespace-aware orchestration for individual vehicles
-- Compatible with Ubuntu 22.04, ROS 2 Humble, and AWSIM Labs
+
+- Multi-host, multi-vehicle Automated Valet Parking (AVP) simulation
+- Zenoh-based distributed ROS 2 topic bridging for synchronized operation
+- Parking spot detection and reservation mechanisms
+- Namespace-aware orchestration for individual Autoware stacks
+- Custom RViz panel for streamlined AVP testing and monitoring
+- Scalable to larger fleets and more complex simulation scenarios
 
 ---
 
