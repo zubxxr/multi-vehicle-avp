@@ -9,7 +9,7 @@
 ![AVP Node](https://img.shields.io/badge/AVP_Node-custom-black?logo=robotframework)
 ![License](https://img.shields.io/badge/License-Apache%202.0-blue?logo=apache)
 
-The **Multi-Vehicle AVP** system extends the **Multi-Vehicle Framework** to support **multiple vehicles operating in a shared simulation environment across different physical hosts**.  
+The **Multi-Vehicle AVP** system extends the [Multi-Vehicle AV Framework](https://zubxxr.github.io/multi-vehicle-framework) to support **multiple vehicles operating in a shared simulation environment across different physical hosts**.  
 
 This setup leverages **Zenoh** for ROS 2 topic synchronization, enabling each vehicle to operate its own Autoware stack while coordinating parking decisions in real-time.
 
