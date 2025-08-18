@@ -64,8 +64,4 @@ nav:
     - Benchmarks: Scalability/Benchmarks/index.md
   - Developer Guide:
     - Quick Commands: DeveloperGuide/QuickCommands/index.md
-  - Future Work:
-      - Future Work: Extensions/FutureWork/index.md
-  - About:
-      - License: About/License/index.md
-      - Acknowledgements: About/Acknowledgements/index.md
+    - License: DeveloperGuide/License/index.md
