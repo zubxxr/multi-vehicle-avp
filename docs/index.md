@@ -1,5 +1,5 @@
-# Multi-Vehicle AVP
-*Distributed Automated Valet Parking Across Multiple Hosts*
+# Multi-Vehicle Autonomous Valet Parking
+*Distributed Autonomous Valet Parking Across Multiple Hosts*
 
 ![Autoware](https://img.shields.io/badge/Autoware-2024.11-blue?logo=autoware)
 ![AWSIM Labs](https://img.shields.io/badge/AWSIM%20Labs-Unity-green?logo=unity)
