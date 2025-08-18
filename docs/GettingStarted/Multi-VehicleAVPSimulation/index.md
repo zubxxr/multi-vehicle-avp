@@ -36,12 +36,7 @@ Follow the steps below to launch all components required for the simulation.
     source ~/Multi-Vehicle-Autonomous-Valet-Parking/yolo_detection_server/venv/bin/activate
     python3 yolo_server.py
     ```
-
-    If everything is working correctly, you will see output similar to the image below:
-
-    ![image](https://github.com/user-attachments/assets/346d98c2-df20-48df-8cc1-311367c3021b)
-
-  
+    
 3. **Start the AVP Module**
 
     **Host 1**
