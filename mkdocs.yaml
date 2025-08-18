@@ -59,7 +59,11 @@ nav:
       - System Architecture: GettingStarted/SystemArchitecture/index.md
       - Software Setup: GettingStarted/SoftwareSetup/index.md
       - Multi-Vehicle AVP Simulation: GettingStarted/Multi-VehicleAVPSimulation/index.md
-      - Scaling to More Vehicles: GettingStarted/ScalingToMoreVehicles/index.md
+  - Scalability: 
+    - Scaling to More Vehicles: Scalability/ScalingToMoreVehicles/index.md
+    - Benchmarks: Scalability/Benchmarks/index.md
+  - Developer Guide:
+    - Quick Commands: DeveloperGuide/QuickCommands/index.md
   - Future Work:
       - Future Work: Extensions/FutureWork/index.md
   - About:
