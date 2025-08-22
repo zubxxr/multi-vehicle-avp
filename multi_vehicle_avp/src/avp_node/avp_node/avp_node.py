@@ -114,7 +114,7 @@ def main(args=None):
     current_state = VehicleState.ARRIVED_AT_LOCATION
     chosen_parking_spot = None
     front_car_moved = False
-    first_spot_in_queue = -1
+    first_spot_in_empty_parking_spot_list = -1
     waiting_for_queue = True
 
     if args.debug:
@@ -229,11 +229,11 @@ def main(args=None):
                 rclpy.spin_once(parking_spot_subscriber, timeout_sec=0.5)
                 parking_spots = parking_spot_subscriber.available_parking_spots
                 if parking_spots:
-                    first_spot_in_queue = int(parking_spots.strip('[]').split(',')[0])
-                    if first_spot_in_queue != chosen_parking_spot:
-                        chosen_parking_spot = first_spot_in_queue
+                    first_spot_in_empty_parking_spot_list = int(parking_spots.strip('[]').split(',')[0])
+                    if first_spot_in_empty_parking_spot_list != chosen_parking_spot:
+                        chosen_parking_spot = first_spot_in_empty_parking_spot_list
 
-                        avp_command_listener.get_logger().info('\nAvailable parking spot found: %s' % first_spot_in_queue)
+                        avp_command_listener.get_logger().info('\nAvailable parking spot found: %s' % first_spot_in_empty_parking_spot_list)
                         avp_command_listener.publish_vehicle_status("Available parking spot found.")
                         time.sleep(2)
 
@@ -242,23 +242,23 @@ def main(args=None):
                     avp_command_listener.get_logger().warn("[WARN] No available parking spots received from the subscriber.")
 
             elif current_state == VehicleState.RESERVING_PARKING_SPOT:
-                if first_spot_in_queue not in avp_command_listener.reserved_spots_list:
-                    avp_command_listener.reserved_spot_request_pub.publish(String(data=str(first_spot_in_queue)))
-                    avp_command_listener.reserved_spots_list.append(first_spot_in_queue)
-                    avp_command_listener.get_logger().info(f"[AVP] Sent reservation request: {str(first_spot_in_queue)}")
+                if first_spot_in_empty_parking_spot_list not in avp_command_listener.reserved_spots_list:
+                    avp_command_listener.reserved_spot_request_pub.publish(String(data=str(first_spot_in_empty_parking_spot_list)))
+                    avp_command_listener.reserved_spots_list.append(first_spot_in_empty_parking_spot_list)
+                    avp_command_listener.get_logger().info(f"[AVP] Sent reservation request: {str(first_spot_in_empty_parking_spot_list)}")
                 else:
-                    avp_command_listener.get_logger().warn(f"[AVP] Spot {str(first_spot_in_queue)} already requested.")
+                    avp_command_listener.get_logger().warn(f"[AVP] Spot {str(first_spot_in_empty_parking_spot_list)} already requested.")
 
-                chosen_parking_spot = first_spot_in_queue
+                chosen_parking_spot = first_spot_in_empty_parking_spot_list
                 route_state_subscriber.state = -1
 
                 current_state = VehicleState.DRIVING_TO_PARKING_SPOT
 
             elif current_state == VehicleState.DRIVING_TO_PARKING_SPOT:
-                avp_command_listener.publish_vehicle_status(f"Parking in Spot {first_spot_in_queue}.")
+                avp_command_listener.publish_vehicle_status(f"Parking in Spot {first_spot_in_empty_parking_spot_list}.")
                 avp_command_listener.queue_remove_pub.publish(String(data=avp_command_listener.vehicle_id))
             
-                run_ros2_command(parking_spot_locations[first_spot_in_queue])
+                run_ros2_command(parking_spot_locations[first_spot_in_empty_parking_spot_list])
                 run_ros2_command(engage_autonomous_mode)
                 wait_until_route_complete(route_state_subscriber)
                 current_state = VehicleState.PARKED_AND_CLEARING_RESERVATION
