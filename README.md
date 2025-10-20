@@ -9,10 +9,9 @@
 ![AVP Node](https://img.shields.io/badge/AVP_Node-custom-black?logo=robotframework)
 ![License](https://img.shields.io/badge/License-Apache%202.0-blue?logo=apache)
 
-The **Multi-Vehicle AVP** system extends the [Multi-Vehicle AV Framework](https://github.com/zubxxr/multi-vehicle-framework) to support **multiple vehicles operating in a shared simulation environment across different physical hosts**.  
+The **Multi-Vehicle Autonomous Valet Parking** system extends the [**Distributed Multi-Vehicle Architecture**](https://github.com/zubxxr/distributed-multi-vehicle-architecture) to support **coordinated autonomous parking across multiple vehicles and physical hosts** using **Autoware Universe**, **AWSIM Labs**, and **Zenoh**.  
 
-This setup leverages **Zenoh** for ROS 2 topic synchronization, enabling each vehicle to operate its own Autoware stack while coordinating parking decisions in real-time.
-
+It integrates a **Unity-based perception module (U-YOLO)** for parking-spot detection and a **Multi-Vehicle AVP Node** for orchestration, queuing, and reservation management. Together, these components enable **real-time distributed coordination**, **synchronized planning**, and **conflict-free multi-vehicle parking behavior**.
 ---
 
 ## Features
