@@ -12,6 +12,7 @@
 The **Multi-Vehicle Autonomous Valet Parking** system extends the [**Distributed Multi-Vehicle Architecture**](https://github.com/zubxxr/distributed-multi-vehicle-architecture) to support **coordinated autonomous parking across multiple vehicles and physical hosts** using **Autoware Universe**, **AWSIM Labs**, and **Zenoh**.  
 
 It integrates a **Unity-based perception module (U-YOLO)** for parking-spot detection and a **Multi-Vehicle AVP Node** for orchestration, queuing, and reservation management. Together, these components enable **real-time distributed coordination**, **synchronized planning**, and **conflict-free multi-vehicle parking behavior**.
+
 ---
 
 ## Features
