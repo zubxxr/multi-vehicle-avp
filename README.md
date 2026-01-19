@@ -15,6 +15,12 @@ It integrates a **Unity-based perception module (U-YOLO)** for parking-spot dete
 
 ---
 
+---
+
+## Demo
+
+[![Multi-Vehicle AVP Demo](https://img.youtube.com/vi/o4xINcS6eKY/maxresdefault.jpg)](https://www.youtube.com/watch?v=o4xINcS6eKY)
+
 ## Features
 
 - Multi-host, multi-vehicle Automated Valet Parking (AVP) simulation
