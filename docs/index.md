@@ -9,9 +9,9 @@
 ![AVP Node](https://img.shields.io/badge/AVP_Node-custom-black?logo=robotframework)
 ![License](https://img.shields.io/badge/License-Apache%202.0-blue?logo=apache)
 
-**DMV-AVP** system  the [**DMAVA**](https://github.com/zubxxr/distributed-multi-vehicle-architecture) to support **coordinated autonomous parking across multiple vehicles and physical hosts** using **Autoware Universe**, **AWSIM Labs**, and **Zenoh**.  
+**DMV-AVP** extends [**DMAVA**](https://github.com/zubxxr/distributed-multi-vehicle-architecture) to support **coordinated AVP across multiple vehicles and physical hosts** using **Autoware Universe**, **AWSIM Labs**, and **Zenoh**.  
 
-It integrates a **Unity-based perception module (U-YOLO)** for parking-spot detection and a **Multi-Vehicle AVP Node** for orchestration, queuing, and reservation management. Together, these components enable **real-time distributed coordination**, **synchronized planning**, and **conflict-free multi-vehicle parking behavior**.
+It adds the **U-YOLO** for parking-spot detection and **AVP-CF** modules for orchestration, queuing, and reservation management. Together, these components enable **real-time distributed coordination**, **synchronized planning**, and **conflict-free multi-vehicle parking behavior**.
 
 ---
 
