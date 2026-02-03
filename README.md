@@ -1,29 +1,38 @@
-# Multi-Vehicle Autonomous Valet Parking
+# DMV-AVP: Distributed Multi-Vehicle Autonomous Valet Parking
 *Distributed Autonomous Valet Parking Across Multiple Hostss*
 
 ![Autoware](https://img.shields.io/badge/Autoware-2024.11-blue?logo=autoware)
 ![AWSIM Labs](https://img.shields.io/badge/AWSIM%20Labs-Unity-green?logo=unity)
 ![ROS 2 Humble](https://img.shields.io/badge/ROS2-Humble-purple?logo=ros)
-![Zenoh](https://img.shields.io/badge/Zenoh-1.4.0-orange?logo=zenoh)
+![Zenoh](https://img.shields.io/badge/Zenoh-1.7.2-orange?logo=zenoh)
 ![YOLOv5](https://img.shields.io/badge/YOLO-v5-red?logo=github)
 ![AVP Node](https://img.shields.io/badge/AVP_Node-custom-black?logo=robotframework)
 ![License](https://img.shields.io/badge/License-Apache%202.0-blue?logo=apache)
 
-The **Multi-Vehicle Autonomous Valet Parking** system extends the [**Distributed Multi-Vehicle Architecture**](https://github.com/zubxxr/distributed-multi-vehicle-architecture) to support **coordinated autonomous parking across multiple vehicles and physical hosts** using **Autoware Universe**, **AWSIM Labs**, and **Zenoh**.  
+**DMV-AVP** system  the [**DMAVA**](https://github.com/zubxxr/distributed-multi-vehicle-architecture) to support **coordinated AVP across multiple vehicles and physical hosts** using **Autoware Universe**, **AWSIM Labs**, and **Zenoh**.  
 
-It integrates a **Unity-based perception module (U-YOLO)** for parking-spot detection and a **Multi-Vehicle AVP Node** for orchestration, queuing, and reservation management. Together, these components enable **real-time distributed coordination**, **synchronized planning**, and **conflict-free multi-vehicle parking behavior**.
+It adds the **U-YOLO** for parking-spot detection and **AVP-CF** modules for orchestration, queuing, and reservation management. Together, these components enable **real-time distributed coordination**, **synchronized planning**, and **conflict-free multi-vehicle parking behavior**.
 
 ---
+
+## Related Publication
+This repository is part of the following paper:
+
+**DMV-AVP: Distributed Multi-Vehicle Autonomous Valet Parking Using Autoware**  
+Zubair Islam, Mohamed El-Darieby  
+*Accepted at IEEE Intelligent Vehicles Symposium (IV) 2026, awaiting publication*  
+
+Preprint: https://arxiv.org/abs/2601.16327
 
 ---
 
 ## Demo
 
-[![Multi-Vehicle AVP Demo](https://img.youtube.com/vi/o4xINcS6eKY/maxresdefault.jpg)](https://www.youtube.com/watch?v=o4xINcS6eKY)
+[![DMV-AVP Demo](https://img.youtube.com/vi/o4xINcS6eKY/maxresdefault.jpg)](https://www.youtube.com/watch?v=o4xINcS6eKY)
 
 ## Features
 
-- Multi-host, multi-vehicle Automated Valet Parking (AVP) simulation
+- Multi-host, multi-vehicle AVP simulation
 - Zenoh-based distributed ROS 2 topic bridging for synchronized operation
 - Parking spot detection and reservation mechanisms
 - Namespace-aware orchestration for individual Autoware stacks
