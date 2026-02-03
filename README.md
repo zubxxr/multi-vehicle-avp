@@ -30,6 +30,13 @@ Preprint: https://arxiv.org/abs/2601.16327
 
 [![DMV-AVP Demo](https://img.youtube.com/vi/o4xINcS6eKY/maxresdefault.jpg)](https://www.youtube.com/watch?v=o4xINcS6eKY)
 
+### Additional Demo Videos
+
+A larger set of recorded demonstrations covering multi-vehicle AVP execution, reservation handling, and distributed operation across multiple hosts is available here:
+
+**DMV-AVP Demo Playlist**  
+https://youtube.com/playlist?list=PL4MADLjXmDi3UrysohcEfdRHWi8pp3C_1
+
 ## Features
 
 - Multi-host, multi-vehicle AVP simulation
