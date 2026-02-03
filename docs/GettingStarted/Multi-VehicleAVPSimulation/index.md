@@ -6,15 +6,15 @@ Ensure the following components are set up on each host:
 - **Host 1**:
 
     - AWSIM Labs simulation (Unity-based)
-    - YOLOv5-based parking spot detection server
+    - U-YOLO module
     - Autoware (vehicle 1 stack)
-    - AVP orchestration node (with **manager nodes** enabled)
+    - The AVP Managers from the AVP-CF
     - Zenoh Bridge (in router mode)
 
 - **Host 2**:
 
     - Autoware (vehicle 2 stack, with `/vehicle2` namespace)
-    - A second AVP orchestration node (**no managers**, namespace-aware)
+    - The AVP Node from the AVP-CF
     - Zenoh Bridge (in client mode)
 
 ---
@@ -22,9 +22,9 @@ Ensure the following components are set up on each host:
 ## Launch Sequence
 Follow the steps below to launch all components required for the simulation.
 
-1. **Launching the Framework**
+1. **Launching the DMAVA**
 
-    Follow the [Multi-Vehicle Simulation](https://zubxxr.github.io/multi-vehicle-framework/GettingStarted/Multi-VehicleSimulation) section in the framework.
+    Follow the [Launch Sequence](https://zubxxr.github.io/distributed-multi-autonomous-vehicle-architecture/GettingStarted/Multi-VehicleSimulation/) in DMAVA.
 
 2. **Start the YOLO Server**
 
@@ -33,7 +33,7 @@ Follow the steps below to launch all components required for the simulation.
     Go to Tab 1, split the terminal horizontally, and run the following commands in the bottom pane:
 
     ```bash
-    source ~/Multi-Vehicle-Autonomous-Valet-Parking/yolo_detection_server/venv/bin/activate
+    source ~/multi-vehicle-avp/yolo_detection_server/venv/bin/activate
     python3 yolo_server.py
     ```
     
@@ -47,7 +47,6 @@ Follow the steps below to launch all components required for the simulation.
     source ~/multi-vehicle-avp/multi_vehicle_avp/install/setup.bash
     ros2 launch avp_node multi_avp_launch.py vehicle_id:=1 enable_managers:=true namespaces:="['vehicle2']"
     ```
-    > See [] for explanation of arguments.
 
     **Host 2**
 

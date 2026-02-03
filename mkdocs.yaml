@@ -1,4 +1,4 @@
-site_name: Multi-Vehicle AVP
+site_name: DMV-AVP
 site_description: A real-time distributed automated valet parking simulation across multiple hosts
 site_url: https://zubxxr.github.io/multi-vehicle-avp
 repo_name: zubxxr/multi-vehicle-avp
@@ -61,7 +61,7 @@ nav:
       - Multi-Vehicle AVP Simulation: GettingStarted/Multi-VehicleAVPSimulation/index.md
   - Scalability: 
     - Scaling to More Vehicles: Scalability/ScalingToMoreVehicles/index.md
-    - Benchmarks: Scalability/Benchmarks/index.md
+    - System Performance & Network Characterization: Scalability/SystemPerformanceAndNetworkCharacterization/index.md
   - Developer Guide:
     - Quick Commands: DeveloperGuide/QuickCommands/index.md
     - License: DeveloperGuide/License/index.md

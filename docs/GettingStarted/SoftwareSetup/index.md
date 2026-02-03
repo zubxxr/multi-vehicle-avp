@@ -5,21 +5,12 @@ This section provides installation steps for each required component in the AVP 
 
 > Refer to [Host Roles](../SystemArchitecture/index.md/#host-roles) to determine where each tool should be installed.
 
-### Multi-Vehicle AV Framework
-Follow the **Getting Started** sections in the [Multi-Vehicle AV Framework](https://zubxxr.github.io/multi-vehicle-framework) to setup and simulate the framework.
+### DMAVA
+Follow the **Getting Started** sections in the [DMAVA](https://github.com/zubxxr/distributed-multi-autonomous-vehicle-architecture).
 
 ### Repository Cloning
 
-Clone the main repository for this AVP framework on **all hosts**.
-
-**Recommended**: use the latest stable release  
-
-```bash
-cd ~
-git clone https://github.com/zubxxr/multi-vehicle-avp.git -b release/2025.08
-```
-
-**Alternatively**: use the main branch if you want the newest (possibly experimental) changes
+Clone the main repository for DMV-AVP on **all hosts**.
 
 ```bash
 cd ~
@@ -28,16 +19,15 @@ git clone https://github.com/zubxxr/multi-vehicle-avp.git
 
 This repository contains:
 
-- The AVP orchestration node
-- YOLOv5-based detection server
-- Parking Spot Detection Unity code
+- The AVP-CF
+- U-YOLO Module
 
 ---
 
 
-### YOLOv5-Based Parking Spot Detection Module
+### Unity-Integrated YOLOv5 Parking Spot Detection (U-YOLO)
 
-The YOLOv5 server runs locally on the same machine as AWSIM Labs. Its workflow is as follows:
+U-YOLO runs locally on the same machine as AWSIM Labs. Its workflow is as follows:
 
 1. Captures frames from the overhead camera in the simulation.  
 2. Performs vehicle detection using YOLOv5.  
@@ -58,15 +48,15 @@ source ~/multi-vehicle-avp/yolo_detection_server/venv/bin/activate
 pip install -r requirements.txt
 ```
 
-###  Multi-Vehicle AVP Orchestration Module
-The Multi-Vehicle AVP Orchestration Module is the central control module that coordinates goal assignment, parking logic, and reservation handling across multiple vehicles. Each vehicle is assigned a dedicated AVP node instance, with only one host being assigned manager responsibilities.The node also interfaces with RViz for visualization and command input.
+###  Multi-Vehicle AVP Coordination Framework (AVP-CF)
+The AVP-CF is the central control module that coordinates goal assignment, parking logic, and reservation handling across multiple vehicles. Each vehicle is assigned a dedicated AVP node instance, with only one host being assigned manager responsibilities.The node also interfaces with RViz for visualization and command input.
 
 This node must be built and installed on every host running an Autoware stack.
 
     
-#### AVP Module Setup
+#### Setup
 
-Build the AVP Module.
+Build the AVP-CF.
 ```bash
 cd ~/multi-vehicle-avp/multi_vehicle_avp/
 colcon build
