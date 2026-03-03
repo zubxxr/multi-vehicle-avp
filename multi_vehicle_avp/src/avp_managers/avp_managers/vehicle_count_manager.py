@@ -45,10 +45,7 @@ class VehicleCountManager(Node):
             self.namespaces = ast.literal_eval(raw_value) if isinstance(raw_value, str) else raw_value
             if not isinstance(self.namespaces, list) or not all(isinstance(ns, str) for ns in self.namespaces):
                 raise ValueError("Invalid type inside namespaces")
-
-            # Always include global 'default' namespace
-            if 'default' not in self.namespaces:
-                self.namespaces.insert(0, 'default')
+                
         except Exception as e:
             self.get_logger().error(f"Invalid 'namespaces' parameter. Must be a list of strings. Error: {e}")
             return
