@@ -42,9 +42,6 @@ class QueueManager(Node):
             if not isinstance(self.namespaces, list) or not all(isinstance(ns, str) for ns in self.namespaces):
                 raise ValueError("Invalid 'namespaces' list")
             
-            # Always include global 'default' namespace
-            if 'default' not in self.namespaces:
-                self.namespaces.insert(0, 'default')
         except Exception as e:
             self.get_logger().error(f"Invalid 'namespaces' parameter. Error: {e}")
             return
