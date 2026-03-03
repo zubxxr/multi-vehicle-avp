@@ -47,10 +47,7 @@ class VehicleStatusManager(Node):
             # self.namespaces = self.get_parameter('namespaces').value
             if not all(isinstance(ns, str) for ns in self.namespaces):
                 raise ValueError("Namespaces must be a list of strings.")
-            
-            # Always include global 'default' namespace
-            if 'default' not in self.namespaces:
-                self.namespaces.insert(0, 'default')
+
         except Exception as e:
             self.get_logger().error(f"Invalid namespaces: {e}")
             return
